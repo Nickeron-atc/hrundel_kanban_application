@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Hrundel Kanban"
+version = "1.0.0"
+id = "artifacts/hrundel-kanban"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19523
+
+[services.development]
+run = "pnpm --filter @workspace/hrundel-kanban run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hrundel-kanban", "run", "build" ]
+publicDir = "artifacts/hrundel-kanban/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19523"
+BASE_PATH = "/"

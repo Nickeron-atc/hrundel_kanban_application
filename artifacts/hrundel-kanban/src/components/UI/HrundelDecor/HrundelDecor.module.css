@@ -1,0 +1,11 @@
+.decor {
+  position: fixed;
+  bottom: -10px;
+  right: -10px;
+  width: 260px;
+  height: 210px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.12;
+  user-select: none;
+}

@@ -1,0 +1,134 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+dist
+build
+.next
+out
+*.tsbuildinfo
+.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage
+.nyc_output
+.pytest_cache
+__pycache__/
+
+# Temporary files
+tmp
+temp
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.dll
+
+# Package manager locks (optional - some teams commit these)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Production specific
+*.tgz
+*.tar.gz
+
+# Debug
+debug.log
+
+# Docker
+docker-compose.override.yml
+docker-compose.*.yml
+
+# Turborepo
+.turbo
+
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettiercache
+
+# Next.js
+.next
+out
+build
+
+# Nuxt.js
+.nuxt
+dist
+
+# Vite
+.vite
+
+# PM2
+.pm2
+
+# Redis
+dump.rdb
+
+# Certificates
+*.pem
+*.crt
+*.key
+
+# Local development overrides
+*.local
+
+# Shell history
+.bash_history
+.zsh_history
+.history/
+
+# Coverage directory used by tools like istanbul
+coverage
+
+# Drizzle
+*.journal
+drizzle/meta
+
