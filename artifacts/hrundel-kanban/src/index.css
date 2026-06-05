@@ -28,13 +28,24 @@
 
 html,
 body {
+ html,
+body {
+  margin: 0;
+  padding: 0;
   height: 100%;
   font-family: var(--font);
   font-size: 15px;
   color: var(--color-text);
-  background: var(--color-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  background: var(--color-bg);
+  background-image: url('./assets/backgrounds/site-background.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
 }
 
 #root {
