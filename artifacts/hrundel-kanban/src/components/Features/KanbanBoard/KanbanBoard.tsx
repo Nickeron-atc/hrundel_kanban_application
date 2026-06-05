@@ -1,4 +1,4 @@
-import { useState, useEffect, DragEvent, useCallback } from "react";
+import { useState, useEffect, DragEvent, useCallback, useRef } from "react";
 import { api, Board, Column } from "../../../services/api";
 import KanbanColumn from "../KanbanColumn/KanbanColumn";
 import Modal from "../../UI/Modal/Modal";
@@ -6,7 +6,13 @@ import Input from "../../UI/Input/Input";
 import Button from "../../UI/Button/Button";
 import styles from "./KanbanBoard.module.css";
 
+
+import cardMoveSound from '../../../assets/sounds/card-move.mp3';
 export default function KanbanBoard() {
+  const cardMoveAudioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    cardMoveAudioRef.current = new Audio(cardMoveSound);
+  }, []); 
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +76,15 @@ export default function KanbanBoard() {
         setSourceColumnId(null);
         return;
       }
+
+      // 🔊 ВОСПРОИЗВЕДЕНИЕ ЗВУКА (добавьте эту строку)
+      if (cardMoveAudioRef.current) {
+        cardMoveAudioRef.current.currentTime = 0;
+        cardMoveAudioRef.current.play().catch(e => {
+          console.debug('Звук не проигрался:', e);
+        });
+      }
+
 
       const srcCol = board.columns.find((c) => c.id === sourceColumnId)!;
       const card = srcCol.cards.find((c) => c.id === draggingCardId)!;
