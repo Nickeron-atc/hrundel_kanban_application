@@ -16,15 +16,15 @@ interface KanbanColumnProps {
   onDeleteColumn?: (boardId: string, columnId: string) => void;
 }
 
-export default function KanbanColumn({ 
-  column, 
+export default function KanbanColumn({
+  column,
   boardId,
-  draggingId, 
-  dragOverColumnId, 
-  onDragStart, 
-  onDragOver, 
-  onDrop, 
-  onDragLeave, 
+  draggingId,
+  dragOverColumnId,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragLeave,
   onAddCard,
   onDeleteColumn
 }: KanbanColumnProps) {

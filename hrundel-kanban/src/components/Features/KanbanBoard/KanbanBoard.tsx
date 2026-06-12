@@ -10,7 +10,7 @@ import cardMoveSound from '../../../assets/sounds/card-move.mp3';
 interface KanbanBoardProps {
   board: Board;
   onAddColumn?: (boardId: string, title: string) => void;
-  onDeleteColumn?: (boardId: string, columnId: string) => void;
+  onDeleteColumn?: (boardId: string, columnId: string) => void; // ← ДОБАВЛЕНО
 }
 
 export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: KanbanBoardProps) {
@@ -140,7 +140,7 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
           <KanbanColumn
             key={column.id}
             column={column}
-            boardId={board.id}
+            boardId={board.id} // ← ДОБАВЛЕНО
             draggingId={draggingCardId}
             dragOverColumnId={dragOverColumnId}
             onDragStart={handleDragStart}
@@ -148,7 +148,7 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
             onDrop={handleDrop}
             onDragLeave={handleDragLeave}
             onAddCard={openAddModal}
-            onDeleteColumn={onDeleteColumn}
+            onDeleteColumn={onDeleteColumn} // ← ДОБАВЛЕНО
           />
         ))}
 
@@ -168,8 +168,8 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
                 <button onClick={handleAddColumnClick} className={styles.addBtn}>
                   Добавить
                 </button>
-                <button 
-                  onClick={() => { setIsAddingColumn(false); setNewColumnTitle(""); }} 
+                <button
+                  onClick={() => { setIsAddingColumn(false); setNewColumnTitle(""); }}
                   className={styles.cancelBtn}
                 >
                   Отмена

@@ -148,7 +148,7 @@ def move_card(board_id: int):
 @app.route("/api/boards", methods=["POST"])
 def create_board():
     body = request.get_json()
-    
+
     if not body:
         return err("Некорректный JSON")
 
