@@ -35,13 +35,20 @@ async function request<T>(
 ): Promise<ApiResponse<T>> {
   try {
     const token = auth.getToken();
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...(options?.headers as Record<string, string>),
-    };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
+    
+    // Используем Headers вместо простого объекта
+    const headers = new Headers(options?.headers);
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
 
-    const res = await fetch(`/api${path}`, { ...options, headers });
+    const res = await fetch(`/api${path}`, { 
+      ...options, 
+      headers 
+    });
 
     let json: unknown;
     try {
@@ -98,7 +105,13 @@ export const api = {
   getBoards(): Promise<ApiResponse<{ boards: Board[] }>> {
     return request("/boards");
   },
-
+  /** POST /api/boards — { name } → { board: Board } */
+  createBoard(name: string): Promise<ApiResponse<{ board: Board }>> {
+    return request("/boards", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    });
+  },
   /** PATCH /api/boards/:boardId/cards — переместить карточку */
   moveCard(
     boardId: string,
@@ -114,6 +127,21 @@ export const api = {
   /** POST /api/auth/logout */
   logout(): Promise<ApiResponse<{ status: string }>> {
     return request("/auth/logout", { method: "POST" });
+  },
+  /** POST /api/boards/:boardId/columns — { title } → { column: Column } */
+  createColumn(boardId: string, title: string): Promise<ApiResponse<{ column: Column }>> {
+    return request(`/boards/${boardId}/columns`, {
+      method: "POST",
+      body: JSON.stringify({ title }),
+    });
+  },
+
+
+  /** DELETE /api/boards/:boardId/columns/:columnId */
+  deleteColumn(boardId: string, columnId: string): Promise<ApiResponse<{ deleted: string }>> {
+    return request(`/boards/${boardId}/columns/${columnId}`, {
+      method: "DELETE",
+    });
   },
 };
 
