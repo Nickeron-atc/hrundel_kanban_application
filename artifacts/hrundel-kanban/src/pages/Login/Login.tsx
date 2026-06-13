@@ -33,8 +33,8 @@ export default function Login() {
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
+    <div className={styles.loginPage}>
+      <div className={styles.loginContainer}>
         <div className={styles.logoRow}>
           <img src={hrundel} alt="Hrundel" className={styles.logoImg} />
           <span className={styles.brand}>Hrundel</span>

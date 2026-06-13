@@ -65,3 +65,97 @@
   justify-content: flex-end;
   margin-top: 20px;
 }
+
+
+
+/* --- Стили для добавления колонки --- */
+.addColumnWrapper {
+  min-width: 280px;
+  margin-left: 16px;
+  flex-shrink: 0;
+}
+
+.addColumnBtn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.addColumnBtn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.addColumnForm {
+  background: var(--color-column-bg, #ebecf0);
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 0 rgba(9, 30, 66, 0.25);
+}
+
+.columnInput {
+  padding: 8px;
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+}
+
+.columnInput:focus {
+  border-color: var(--color-primary, #0079bf);
+}
+
+.columnActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.addBtn, .cancelBtn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.addBtn {
+  background: var(--color-primary, #0079bf);
+  color: white;
+}
+
+.addBtn:hover {
+  background: var(--color-primary-dark, #026aa7);
+}
+
+.cancelBtn {
+  background: transparent;
+  color: var(--color-text, #333);
+}
+
+
+
+
+.deleteButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  opacity: 0.6;
+}
+
+.deleteButton:hover {
+  background: rgba(255, 0, 0, 0.1);
+  opacity: 1;
+}

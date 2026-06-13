@@ -5,29 +5,28 @@ import styles from "./KanbanColumn.module.css";
 
 interface KanbanColumnProps {
   column: Column;
+  boardId?: string; // ← ДОБАВЛЕНО
   draggingId: string | null;
   dragOverColumnId: string | null;
-  onDragStart: (e: DragEvent<HTMLDivElement>, cardId: string) => void;
-  onDragOver: (e: DragEvent<HTMLDivElement>, columnId: string) => void;
-  onDrop: (e: DragEvent<HTMLDivElement>, columnId: string) => void;
+  onDragStart: (e: React.DragEvent<HTMLDivElement>, cardId: string) => void;
+  onDragOver: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
+  onDrop: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
   onDragLeave: () => void;
   onAddCard: (columnId: string) => void;
+  onDeleteColumn?: (boardId: string, columnId: string) => void; // ← ДОБАВЛЕНО
 }
 
-/**
- * @param column            - данные колонки с карточками
- * @param draggingId        - id перетаскиваемой карточки
- * @param dragOverColumnId  - id колонки под курсором при drag
- */
-export default function KanbanColumn({
-  column,
-  draggingId,
-  dragOverColumnId,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragLeave,
+export default function KanbanColumn({ 
+  column, 
+  boardId,
+  draggingId, 
+  dragOverColumnId, 
+  onDragStart, 
+  onDragOver, 
+  onDrop, 
+  onDragLeave, 
   onAddCard,
+  onDeleteColumn // ← ДОБАВЛЕНО
 }: KanbanColumnProps) {
   const isDragOver = dragOverColumnId === column.id;
 
@@ -44,6 +43,16 @@ export default function KanbanColumn({
         <div className={styles.titleRow}>
           <span className={styles.title}>{column.title}</span>
           <span className={styles.count}>{column.cards.length}</span>
+          {/* 🔥 КНОПКА МУСОРКИ - добавлена здесь */}
+          {boardId && onDeleteColumn && (
+            <button
+              onClick={() => onDeleteColumn(boardId, column.id)}
+              className={styles.deleteButton}
+              title="Удалить колонку"
+            >
+              🗑️
+            </button>
+          )}
         </div>
       </div>
 

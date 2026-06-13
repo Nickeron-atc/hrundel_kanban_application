@@ -147,6 +147,76 @@ def move_card(board_id: int):
 
     return ok({"cardId": card_id, "targetColumnId": target_column_id})
 
+@app.route("/api/boards", methods=["POST"])
+def create_board():
+    body = request.get_json()
+    
+    if not body:
+        return err("Некорректный JSON")
+
+    name = body.get("name", "").strip()
+
+    if not name:
+        return err("Укажите название доски")
+
+    # Генерируем новый ID (просто увеличиваем счётчик)
+    new_id = str(len(MOCK_BOARDS) + 1)
+
+    new_board = {
+        "id": new_id,
+        "title": name,
+        "columns": []
+    }
+
+    # 🔥 ОБЯЗАТЕЛЬНО добавляем в MOCK_BOARDS!
+    MOCK_BOARDS.append(new_board)
+
+    return jsonify({"status": "ok", "data": {"board": new_board}}), 201
+
+@app.route("/api/boards/<board_id>/columns", methods=["POST"])
+def create_column(board_id: str):
+    body = request.get_json()
+    if not body:
+        return err("Некорректный JSON")
+
+    title = body.get("title", "").strip()
+    if not title:
+        return err("Укажите название колонки")
+
+    # Ищем доску
+    board = next((b for b in MOCK_BOARDS if b["id"] == board_id), None)
+    if not board:
+        return err("Доска не найдена", 404)
+
+    # Генерируем ID колонки
+    new_id = f"col-{len(board['columns']) + 1}"
+    new_column = {
+        "id": new_id,
+        "title": title,
+        "cards": []
+    }
+
+    board["columns"].append(new_column)
+
+    return jsonify({"status": "ok", "data": {"column": new_column}}), 201
+
+
+@app.route("/api/boards/<board_id>/columns/<column_id>", methods=["DELETE"])
+def delete_column(board_id: str, column_id: str):
+    # Ищем доску
+    board = next((b for b in MOCK_BOARDS if b["id"] == board_id), None)
+    if not board:
+        return err("Доска не найдена", 404)
+
+    # Ищем колонку
+    column_index = next((i for i, c in enumerate(board["columns"]) if c["id"] == column_id), None)
+    if column_index is None:
+        return err("Колонка не найдена", 404)
+
+    # Удаляем колонку
+    board["columns"].pop(column_index)
+
+    return jsonify({"status": "ok", "data": {"deleted": column_id}}), 200
 
 # ---------------------------------------------------------------------------
 # Entry point
