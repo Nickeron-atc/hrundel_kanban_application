@@ -1,6 +1,6 @@
 # Hrundel Kanban Application
 
-## WHAT IS THIS ABOUT
+## WHAT IS THIS ALL ABOUT???
 
 Hrundel Kanban is a minimalist, production-ready Kanban board application designed for efficient task management. It features a clean, responsive user interface built with React and a robust backend powered by Flask and PostgreSQL. The entire stack is fully containerized using Docker, making it easy to deploy and run consistently across any environment.
 
@@ -12,7 +12,7 @@ Key Features:
 - Responsive UI: Clean interface built with Tailwind CSS and shadcn/ui components.
 - Production-Ready: Fully containerized with Docker, Nginx, and PostgreSQL.
 
-## TECH STACK
+## TECH STACK 	(͡ ° ͜ʖ ͡ °)
 
 Frontend:
 - React 18, Vite, TypeScript
@@ -31,7 +31,7 @@ Infrastructure:
 - Docker and Docker Compose for containerization
 - Nginx as a reverse proxy and static file server
 
-## HOW TO RUN
+## HOW TO RUN ʕノ•ᴥ•ʔノ ︵ ┻━┻
 
 ### Option 1: Docker (Recommended)
 This is the fastest way to get the entire stack (Frontend, Backend, Database) running.
@@ -90,7 +90,7 @@ If you want to modify the code and see changes instantly without rebuilding Dock
    ```
    The Vite dev server will start on `http://localhost:5173`. It is configured to proxy all `/api/*` requests directly to the Flask backend.
 
-## PROJECT STRUCTURE
+## PROJECT STRUCTURE ԅ(≖‿≖ԅ)
 ```tree
 hrundel_kanban_application/
 ├── docker-compose.yml          # Orchestrates frontend, backend, and database
@@ -111,7 +111,7 @@ hrundel_kanban_application/
 └── services/api.ts     # API client
 ```
 
-## USAGE
+## USAGE (•_•) ( •_•)>⌐■-■ (⌐■_■)
 
 1. Register a new account on the registration page.
 2. Log in with your credentials.
