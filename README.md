@@ -39,20 +39,27 @@ This is the fastest way to get the entire stack (Frontend, Backend, Database) ru
 Prerequisites: Docker and Docker Compose installed.
 
 1. Navigate to the root project directory:
+```bash
    cd hrundel_kanban_application
+```
 
-2. Build and start the containers in the background:
+3. Build and start the containers in the background:
+   ```bash
    docker compose up -d --build
-   (Note: If you get a permission denied error, prefix with sudo or add your user to the docker group).
+   ```
+   (Note!!!: If you get a permission denied error, prefix with sudo or add your user to the docker group).
 
-3. Open your browser and visit:
-   http://localhost
+4. Open your browser and visit: `http://localhost`
 
-4. To view logs:
+5. To view logs:
+   ```bash
    docker compose logs -f
+   ```
 
-5. To stop the application:
+6. To stop the application:
+   ```bash
    docker compose down
+   ```
 
 ### Option 2: Local Development
 If you want to modify the code and see changes instantly without rebuilding Docker images.
@@ -89,7 +96,7 @@ hrundel_kanban_application/
 ├── docker-compose.yml          # Orchestrates frontend, backend, and database
 ├── db/                         # PostgreSQL initialization scripts
 │   ├── Dockerfile              
-│ └── init.sql                
+│   └── init.sql                
 ├── backend/                    # Flask API
 │   ├── Dockerfile              
 │   ├── requirements.txt        
