@@ -6,14 +6,10 @@ interface KanbanCardProps {
   card: Card;
   onDragStart: (e: DragEvent<HTMLDivElement>, cardId: string) => void;
   draggingId: string | null;
+  onDelete?: (cardId: string) => void;
 }
 
-/**
- * @param card         - данные карточки
- * @param onDragStart  - callback начала перетаскивания
- * @param draggingId   - id карточки, которая сейчас перетаскивается
- */
-export default function KanbanCard({ card, onDragStart, draggingId }: KanbanCardProps) {
+export default function KanbanCard({ card, onDragStart, draggingId, onDelete }: KanbanCardProps) {
   const isDragging = draggingId === card.id;
 
   return (
@@ -23,9 +19,20 @@ export default function KanbanCard({ card, onDragStart, draggingId }: KanbanCard
       onDragStart={(e) => onDragStart(e, card.id)}
       role="listitem"
     >
-      <p className={styles.title}>{card.title}</p>
-      {card.description && (
-        <p className={styles.description}>{card.description}</p>
+      <div className={styles.cardContent}>
+        <p className={styles.title}>{card.title}</p>
+        {card.description && (
+          <p className={styles.description}>{card.description}</p>
+        )}
+      </div>
+      {onDelete && (
+        <button
+          onClick={() => onDelete(card.id)}
+          className={styles.deleteBtn}
+          title="Удалить задачу"
+        >
+          🗑️
+        </button>
       )}
     </div>
   );

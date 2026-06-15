@@ -143,6 +143,22 @@ export const api = {
       method: "DELETE",
     });
   },
+
+  /** POST /api/boards/:boardId/columns/:columnId/cards — { title, description } → { card: Card } */
+  createCard(boardId: string, columnId: string, title: string, description: string = ""): Promise<ApiResponse<{ card: Card }>> {
+    return request(`/boards/${boardId}/columns/${columnId}/cards`, {
+      method: "POST",
+      body: JSON.stringify({ title, description }),
+    });
+  },
+
+  /** DELETE /api/boards/:boardId/columns/:columnId/cards/:cardId */
+  deleteCard(boardId: string, columnId: string, cardId: string): Promise<ApiResponse<{ deleted: string }>> {
+    return request(`/boards/${boardId}/columns/${columnId}/cards/${cardId}`, {
+      method: "DELETE",
+    });
+  },
+  
 };
 
 export const auth = {

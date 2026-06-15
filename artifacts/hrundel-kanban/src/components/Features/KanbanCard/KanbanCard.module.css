@@ -38,3 +38,36 @@
   line-height: 1.5;
   word-break: break-word;
 }
+
+
+/* --- Стили для кнопки удаления карточки --- */
+.deleteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  opacity: 0.6;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+.deleteBtn:hover {
+  background: rgba(255, 0, 0, 0.1);
+  opacity: 1;
+}
+
+.cardContent {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Чтобы карточка отображалась как flex-контейнер */
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}

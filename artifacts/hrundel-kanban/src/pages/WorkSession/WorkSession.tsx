@@ -106,6 +106,7 @@ export default function WorkSession() {
           board={currentBoard} 
           onAddColumn={handleAddColumn}
           onDeleteColumn={handleDeleteColumn}
+          onBoardUpdate={(updatedBoards) => setBoards(updatedBoards)}
         />
       ) : (
         <div className={styles.noBoard}>Нет доступных досок</div>

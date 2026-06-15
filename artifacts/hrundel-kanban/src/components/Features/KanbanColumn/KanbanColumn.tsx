@@ -5,7 +5,7 @@ import styles from "./KanbanColumn.module.css";
 
 interface KanbanColumnProps {
   column: Column;
-  boardId?: string; // ← ДОБАВЛЕНО
+  boardId?: string;
   draggingId: string | null;
   dragOverColumnId: string | null;
   onDragStart: (e: React.DragEvent<HTMLDivElement>, cardId: string) => void;
@@ -13,7 +13,8 @@ interface KanbanColumnProps {
   onDrop: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
   onDragLeave: () => void;
   onAddCard: (columnId: string) => void;
-  onDeleteColumn?: (boardId: string, columnId: string) => void; // ← ДОБАВЛЕНО
+  onDeleteColumn?: (boardId: string, columnId: string) => void;
+  onDeleteCard?: (columnId: string, cardId: string) => void; // ← ДОБАВЛЕНО
 }
 
 export default function KanbanColumn({ 
@@ -26,7 +27,8 @@ export default function KanbanColumn({
   onDrop, 
   onDragLeave, 
   onAddCard,
-  onDeleteColumn // ← ДОБАВЛЕНО
+  onDeleteColumn,
+  onDeleteCard // ← ДОБАВЛЕНО
 }: KanbanColumnProps) {
   const isDragOver = dragOverColumnId === column.id;
 
@@ -43,7 +45,6 @@ export default function KanbanColumn({
         <div className={styles.titleRow}>
           <span className={styles.title}>{column.title}</span>
           <span className={styles.count}>{column.cards.length}</span>
-          {/* 🔥 КНОПКА МУСОРКИ - добавлена здесь */}
           {boardId && onDeleteColumn && (
             <button
               onClick={() => onDeleteColumn(boardId, column.id)}
@@ -63,6 +64,7 @@ export default function KanbanColumn({
             card={card}
             onDragStart={onDragStart}
             draggingId={draggingId}
+            onDelete={onDeleteCard ? (cardId) => onDeleteCard(column.id, cardId) : undefined} // ← ДОБАВЛЕНО
           />
         ))}
       </div>

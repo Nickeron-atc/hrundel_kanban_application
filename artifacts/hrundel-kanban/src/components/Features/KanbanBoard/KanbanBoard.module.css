@@ -6,19 +6,23 @@
   width: 100%;
 }
 
+/* Для контейнера заголовка */
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  gap: 16px;
+  background: rgba(255, 255, 255, 0.95); /* Белый полупрозрачный фон */
+  padding: 16px 24px; /* Отступы */
+  border-radius: 12px; /* Скругление */
+  margin-bottom: 20px; /* Отступ снизу */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Тень */
+  backdrop-filter: blur(5px); /* Размытие фона */
+  -webkit-backdrop-filter: blur(5px);
 }
 
+/* Для самого текста заголовка */
 .title {
-  font-size: 22px;
+  color: #1a1a1a; /* Тёмный цвет текста для контраста */
+  font-size: 28px;
   font-weight: 700;
-  color: var(--color-text);
-  letter-spacing: -0.3px;
+  margin: 0;
 }
 
 .columns {

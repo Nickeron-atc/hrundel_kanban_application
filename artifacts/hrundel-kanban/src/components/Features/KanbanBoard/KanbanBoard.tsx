@@ -10,10 +10,11 @@ import cardMoveSound from '../../../assets/sounds/card-move.mp3';
 interface KanbanBoardProps {
   board: Board;
   onAddColumn?: (boardId: string, title: string) => void;
-  onDeleteColumn?: (boardId: string, columnId: string) => void; // ← ДОБАВЛЕНО
+  onDeleteColumn?: (boardId: string, columnId: string) => void;
+  onBoardUpdate?: (boards: Board[]) => void;
 }
 
-export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: KanbanBoardProps) {
+export default function KanbanBoard({ board, onAddColumn, onDeleteColumn, onBoardUpdate }: KanbanBoardProps) {
   const cardMoveAudioRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
     cardMoveAudioRef.current = new Audio(cardMoveSound);
@@ -30,7 +31,6 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
   const [newDescription, setNewDescription] = useState("");
   const [addError, setAddError] = useState("");
 
-  // 🔥 СОСТОЯНИЯ ДЛЯ ДОБАВЛЕНИЯ КОЛОНКИ
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState("");
 
@@ -60,39 +60,40 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
   }, []);
 
   const handleDrop = useCallback(
-    async (e: DragEvent<HTMLDivElement>, targetColumnId: string) => {
-      e.preventDefault();
-      setDragOverColumnId(null);
+  async (e: DragEvent<HTMLDivElement>, targetColumnId: string) => {
+    e.preventDefault();
+    setDragOverColumnId(null);
 
-      if (!draggingCardId || !sourceColumnId) return;
-      if (sourceColumnId === targetColumnId) {
-        setDraggingCardId(null);
-        setSourceColumnId(null);
-        return;
-      }
+    if (!draggingCardId || !sourceColumnId) return;
+    if (sourceColumnId === targetColumnId) {
+      setDraggingCardId(null);
+      setSourceColumnId(null);
+      return;
+    }
 
-      if (cardMoveAudioRef.current) {
-        cardMoveAudioRef.current.currentTime = 0;
-        cardMoveAudioRef.current.play().catch(e => {
-          console.debug('Звук не проигрался:', e);
-        });
-      }
-
-      const srcCol = board.columns.find((c) => c.id === sourceColumnId)!;
-      const card = srcCol.cards.find((c) => c.id === draggingCardId)!;
-
-      const newColumns: Column[] = board.columns.map((col) => {
-        if (col.id === sourceColumnId) {
-          return { ...col, cards: col.cards.filter((c) => c.id !== draggingCardId) };
-        }
-        if (col.id === targetColumnId) {
-          return { ...col, cards: [...col.cards, card] };
-        }
-        return col;
+    if (cardMoveAudioRef.current) {
+      cardMoveAudioRef.current.currentTime = 0;
+      cardMoveAudioRef.current.play().catch(e => {
+        console.debug('Звук не проигрался:', e);
       });
-    },
-    [draggingCardId, sourceColumnId, board]
-  );
+    }
+
+    // Вызываем API для перемещения карточки
+    const res = await api.moveCard(board.id, draggingCardId, targetColumnId);
+    
+    if (res.status === "ok" && onBoardUpdate) {
+      // Перезагружаем список досок
+      const newRes = await api.getBoards();
+      if (newRes.status === "ok") {
+        onBoardUpdate(newRes.data.boards);
+      }
+    }
+
+    setDraggingCardId(null);
+    setSourceColumnId(null);
+  },
+  [draggingCardId, sourceColumnId, board.id, onBoardUpdate]
+);
 
   const openAddModal = useCallback((columnId: string) => {
     setAddColumnId(columnId);
@@ -102,29 +103,41 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
     setAddModal(true);
   }, []);
 
-  const handleAddCard = useCallback(() => {
+  const handleAddCard = useCallback(async () => {
     if (!newTitle.trim()) {
       setAddError("Введите название задачи");
       return;
     }
     if (!addColumnId) return;
 
-    const newCard = {
-      id: `card-${Date.now()}`,
-      title: newTitle.trim(),
-      description: newDescription.trim(),
-    };
+    const res = await api.createCard(board.id, addColumnId, newTitle.trim(), newDescription.trim());
+    
+    if (res.status === "ok") {
+      const newRes = await api.getBoards();
+      if (newRes.status === "ok" && onBoardUpdate) {
+        onBoardUpdate(newRes.data.boards);
+      }
+      setAddModal(false);
+      setNewTitle("");
+      setNewDescription("");
+    } else {
+      setAddError(res.message || "Не удалось создать задачу");
+    }
+  }, [newTitle, newDescription, addColumnId, board.id, onBoardUpdate]);
 
-    const newColumns = board.columns.map((col) =>
-      col.id === addColumnId
-        ? { ...col, cards: [...col.cards, newCard] }
-        : col
-    );
+  // 🔥 ФУНКЦИЯ УДАЛЕНИЯ КАРТОЧКИ
+  const handleDeleteCard = useCallback(async (columnId: string, cardId: string) => {
+    if (!confirm("Вы уверены, что хотите удалить эту задачу?")) return;
+    
+    const res = await api.deleteCard(board.id, columnId, cardId);
+    if (res.status === "ok") {
+      const newRes = await api.getBoards();
+      if (newRes.status === "ok" && onBoardUpdate) {
+        onBoardUpdate(newRes.data.boards);
+      }
+    }
+  }, [board.id, onBoardUpdate]);
 
-    setAddModal(false);
-  }, [newTitle, newDescription, addColumnId, board]);
-
-  // 🔥 ОБРАБОТЧИК ДОБАВЛЕНИЯ КОЛОНКИ
   const handleAddColumnClick = async () => {
     if (!newColumnTitle.trim() || !onAddColumn) return;
     await onAddColumn(board.id, newColumnTitle.trim());
@@ -142,7 +155,7 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
           <KanbanColumn
             key={column.id}
             column={column}
-            boardId={board.id} // ← ДОБАВЛЕНО
+            boardId={board.id}
             draggingId={draggingCardId}
             dragOverColumnId={dragOverColumnId}
             onDragStart={handleDragStart}
@@ -150,11 +163,11 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
             onDrop={handleDrop}
             onDragLeave={handleDragLeave}
             onAddCard={openAddModal}
-            onDeleteColumn={onDeleteColumn} // ← ДОБАВЛЕНО
+            onDeleteColumn={onDeleteColumn}
+            onDeleteCard={handleDeleteCard} // ← ДОБАВЛЕНО
           />
         ))}
 
-        {/* 🔥 БЛОК ДОБАВЛЕНИЯ НОВОЙ КОЛОНКИ */}
         <div className={styles.addColumnWrapper}>
           {isAddingColumn ? (
             <div className={styles.addColumnForm}>

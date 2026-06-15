@@ -133,8 +133,8 @@ def get_boards():
     }), 200
 
 
-@app.route("/api/boards/<int:board_id>/cards", methods=["PATCH"])
-def move_card(board_id: int):
+@app.route("/api/boards/<board_id>/cards", methods=["PATCH"])
+def move_card(board_id: str):
     body = request.get_json(silent=True) or {}
     card_id = body.get("cardId")
     target_column_id = body.get("targetColumnId")
@@ -142,8 +142,32 @@ def move_card(board_id: int):
     if not card_id or not target_column_id:
         return err("Не указан cardId или targetColumnId")
 
-    # TODO: DB — обновить column_id у карточки (UPDATE cards SET column_id=target_column_id WHERE id=card_id)
-    # TODO: Auth — проверить что пользователь владеет этой доской
+    # Ищем доску
+    board = next((b for b in MOCK_BOARDS if b["id"] == board_id), None)
+    if not board:
+        return err("Доска не найдена", 404)
+
+    # Ищем карточку во всех колонках
+    source_column = None
+    card = None
+    for col in board["columns"]:
+        found_card = next((c for c in col["cards"] if c["id"] == card_id), None)
+        if found_card:
+            source_column = col
+            card = found_card
+            break
+
+    if not card or not source_column:
+        return err("Карточка не найдена", 404)
+
+    # Ищем целевую колонку
+    target_column = next((c for c in board["columns"] if c["id"] == target_column_id), None)
+    if not target_column:
+        return err("Целевая колонка не найдена", 404)
+
+    # Перемещаем карточку
+    source_column["cards"] = [c for c in source_column["cards"] if c["id"] != card_id]
+    target_column["cards"].append(card)
 
     return ok({"cardId": card_id, "targetColumnId": target_column_id})
 
@@ -200,6 +224,63 @@ def create_column(board_id: str):
 
     return jsonify({"status": "ok", "data": {"column": new_column}}), 201
 
+
+@app.route("/api/boards/<board_id>/columns/<column_id>/cards", methods=["POST"])
+def create_card(board_id: str, column_id: str):
+    body = request.get_json()
+    if not body:
+        return err("Некорректный JSON")
+
+    title = body.get("title", "").strip()
+    description = body.get("description", "").strip()
+    
+    if not title:
+        return err("Укажите название задачи")
+
+    # Ищем доску
+    board = next((b for b in MOCK_BOARDS if b["id"] == board_id), None)
+    if not board:
+        return err("Доска не найдена", 404)
+
+    # Ищем колонку
+    column = next((c for c in board["columns"] if c["id"] == column_id), None)
+    if not column:
+        return err("Колонка не найдена", 404)
+
+    # Генерируем ID карточки
+    new_id = f"card-{len(column['cards']) + 1}"
+    new_card = {
+        "id": new_id,
+        "title": title,
+        "description": description
+    }
+
+    column["cards"].append(new_card)
+
+    return jsonify({"status": "ok", "data": {"card": new_card}}), 201
+
+
+@app.route("/api/boards/<board_id>/columns/<column_id>/cards/<card_id>", methods=["DELETE"])
+def delete_card(board_id: str, column_id: str, card_id: str):
+    # Ищем доску
+    board = next((b for b in MOCK_BOARDS if b["id"] == board_id), None)
+    if not board:
+        return err("Доска не найдена", 404)
+
+    # Ищем колонку
+    column = next((c for c in board["columns"] if c["id"] == column_id), None)
+    if not column:
+        return err("Колонка не найдена", 404)
+
+    # Ищем карточку
+    card_index = next((i for i, c in enumerate(column["cards"]) if c["id"] == card_id), None)
+    if card_index is None:
+        return err("Карточка не найдена", 404)
+
+    # Удаляем карточку
+    column["cards"].pop(card_index)
+
+    return jsonify({"status": "ok", "data": {"deleted": card_id}}), 200
 
 @app.route("/api/boards/<board_id>/columns/<column_id>", methods=["DELETE"])
 def delete_column(board_id: str, column_id: str):
