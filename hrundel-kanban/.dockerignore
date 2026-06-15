@@ -1,0 +1,15 @@
+# hrundel-kanban/.dockerignore
+node_modules
+dist
+build
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+.env
+.env.*
+*.md
+.vscode
+.idea
+coverage
