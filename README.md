@@ -59,9 +59,12 @@ If you want to modify the code and see changes instantly without rebuilding Dock
 
 1. Start the Database:
    You need PostgreSQL running. You can use Docker just for the DB:
+   ```bash
    docker run -d --name hrundel-db -e POSTGRES_USER=kanban -e POSTGRES_PASSWORD=kanban -e POSTGRES_DB=kanban -p 5432:5432 postgres:15-alpine
+   ```
 
-2. Start the Backend:
+3. Start the Backend:
+   ```bash
    cd backend
    python -m venv venv
    source venv/bin/activate  (On Windows: venv\Scripts\activate)
@@ -69,49 +72,37 @@ If you want to modify the code and see changes instantly without rebuilding Dock
    export DATABASE_URL="postgresql://kanban:kanban@localhost:5432/kanban"
    export SECRET_KEY="dev-secret-key"
    python src/backend.py
-   The Flask server will start on http://localhost:5000.
+   ```
+   The Flask server will start on `http://localhost:5000`.
 
-3. Start the Frontend:
+5. Start the Frontend:
+   ```bash
    cd hrundel-kanban
    pnpm install
    pnpm run dev
-   The Vite dev server will start on http://localhost:5173. It is configured to proxy all /api/* requests directly to the Flask backend.
+   ```
+   The Vite dev server will start on `http://localhost:5173`. It is configured to proxy all `/api/*` requests directly to the Flask backend.
 
 ## PROJECT STRUCTURE
-
+```tree
 hrundel_kanban_application/
-
 ├── docker-compose.yml          # Orchestrates frontend, backend, and database
-
 ├── db/                         # PostgreSQL initialization scripts
-
 │   ├── Dockerfile              
-
 │ └── init.sql                
-
 ├── backend/                    # Flask API
-
 │   ├── Dockerfile              
-
 │   ├── requirements.txt        
-
 │   └── src/backend.py          
-
 └── hrundel-kanban/             # React Frontend
-
 ├── Dockerfile              
-
 ├── nginx.conf              # Nginx config for production
-
 ├── package.json
-
 └── src/
-
 ├── components/         # UI and Feature components
-
 ├── pages/              # Login, Register, WorkSession, etc.
-
 └── services/api.ts     # API client
+```
 
 ## USAGE
 
