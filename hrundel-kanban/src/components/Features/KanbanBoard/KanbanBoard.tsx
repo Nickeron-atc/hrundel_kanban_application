@@ -10,7 +10,7 @@ import cardMoveSound from '../../../assets/sounds/card-move.mp3';
 interface KanbanBoardProps {
   board: Board;
   onAddColumn?: (boardId: string, title: string) => void;
-  onDeleteColumn?: (boardId: string, columnId: string) => void; // ← ДОБАВЛЕНО
+  onDeleteColumn?: (boardId: string, columnId: string) => void;
 }
 
 export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: KanbanBoardProps) {
@@ -140,7 +140,7 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
           <KanbanColumn
             key={column.id}
             column={column}
-            boardId={board.id} // ← ДОБАВЛЕНО
+            boardId={board.id}
             draggingId={draggingCardId}
             dragOverColumnId={dragOverColumnId}
             onDragStart={handleDragStart}
@@ -148,7 +148,7 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
             onDrop={handleDrop}
             onDragLeave={handleDragLeave}
             onAddCard={openAddModal}
-            onDeleteColumn={onDeleteColumn} // ← ДОБАВЛЕНО
+            onDeleteColumn={onDeleteColumn}
           />
         ))}
 
