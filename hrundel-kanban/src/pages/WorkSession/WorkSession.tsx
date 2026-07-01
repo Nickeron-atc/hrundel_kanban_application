@@ -56,7 +56,6 @@ export default function WorkSession() {
     }
   };
 
-  // 🔥 ПЕРЕМЕЩЕНО ВНУТРЬ КОМПОНЕНТА
   const handleDeleteColumn = async (boardId: string, columnId: string) => {
     if (!confirm("Вы уверены, что хотите удалить эту колонку?")) return;
     

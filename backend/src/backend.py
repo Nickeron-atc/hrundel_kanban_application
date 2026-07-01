@@ -2,7 +2,6 @@
 Hrundel Kanban — Flask backend (stub endpoints).
 
 Все маршруты возвращают хардкодные данные.
-Места для подключения реальной БД и бизнес-логики отмечены комментарием: # TODO: DB
 """
 
 from flask import Flask, request, jsonify
@@ -11,7 +10,6 @@ from flask_cors import CORS
 app = Flask(__name__)
 
 # Разрешаем CORS для фронтенда на localhost (Vite dev-server).
-# В продакшене ограничь origins списком реальных доменов.
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # ---------------------------------------------------------------------------
@@ -159,7 +157,6 @@ def create_board():
     if not name:
         return err("Укажите название доски")
 
-    # Генерируем новый ID (просто увеличиваем счётчик)
     new_id = str(len(MOCK_BOARDS) + 1)
 
     new_board = {
@@ -168,7 +165,6 @@ def create_board():
         "columns": []
     }
 
-    # 🔥 ОБЯЗАТЕЛЬНО добавляем в MOCK_BOARDS!
     MOCK_BOARDS.append(new_board)
 
     return jsonify({"status": "ok", "data": {"board": new_board}}), 201
@@ -183,12 +179,10 @@ def create_column(board_id: str):
     if not title:
         return err("Укажите название колонки")
 
-    # Ищем доску
     board = next((b for b in MOCK_BOARDS if b["id"] == board_id), None)
     if not board:
         return err("Доска не найдена", 404)
 
-    # Генерируем ID колонки
     new_id = f"col-{len(board['columns']) + 1}"
     new_column = {
         "id": new_id,
@@ -223,8 +217,4 @@ def delete_column(board_id: str, column_id: str):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    # debug=False чтобы не запускать reloader — он создаёт дочерний процесс
-    # и ломает статус workflow-менеджера.
-    # Для горячей перезагрузки используй: FLASK_DEBUG=1 flask run --reload
-    # В продакшене: gunicorn -w 4 -b 0.0.0.0:5000 src.backend:app
     app.run(host="0.0.0.0", port=5000, debug=False)
