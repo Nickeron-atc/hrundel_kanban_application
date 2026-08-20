@@ -1,50 +1,29 @@
 -- db/init.sql
-CREATE TYPE board_role AS ENUM ('owner', 'admin', 'member', 'viewer');
+CREATE TABLE IF NOT EXISTS users (
+                                     id SERIAL PRIMARY KEY,
+                                     login VARCHAR(80) UNIQUE NOT NULL,
+    password_hash VARCHAR(120) NOT NULL,
+    full_name VARCHAR(120)
+    );
 
-CREATE TABLE users
-(
-    id            BIGSERIAL PRIMARY KEY,
-    name          TEXT        NOT NULL,
-    password_hash TEXT        NOT NULL,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+CREATE TABLE IF NOT EXISTS boards (
+                                      id SERIAL PRIMARY KEY,
+                                      title VARCHAR(120) NOT NULL,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
+    );
 
-CREATE TABLE boards
-(
-    id         BIGSERIAL PRIMARY KEY,
-    owner_id   BIGINT      NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    title      TEXT        NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+CREATE TABLE IF NOT EXISTS columns (
+                                       id SERIAL PRIMARY KEY,
+                                       title VARCHAR(120) NOT NULL,
+    board_id INTEGER REFERENCES boards(id) ON DELETE CASCADE
+    );
 
-CREATE TABLE board_members
-(
-    board_id  BIGINT     NOT NULL REFERENCES boards (id) ON DELETE CASCADE,
-    user_id   BIGINT     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    user_role board_role NOT NULL DEFAULT 'member',
-    PRIMARY KEY (board_id, user_id)
-);
-
-CREATE TABLE board_columns
-(
-    id         BIGSERIAL PRIMARY KEY,
-    board_id   BIGINT      NOT NULL REFERENCES boards (id) ON DELETE CASCADE,
-    title      TEXT        NOT NULL,
-    position   INT         NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE cards
-(
-    id          BIGSERIAL PRIMARY KEY,
-    board_id    BIGINT      NOT NULL REFERENCES boards (id) ON DELETE CASCADE,
-    column_id   BIGINT      NOT NULL REFERENCES board_columns (id) ON DELETE CASCADE,
-    title       TEXT        NOT NULL,
+CREATE TABLE IF NOT EXISTS cards (
+                                     id SERIAL PRIMARY KEY,
+                                     title VARCHAR(120) NOT NULL,
     description TEXT,
-    position    INT         NOT NULL DEFAULT 0,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+    column_id INTEGER REFERENCES columns(id) ON DELETE CASCADE
+    );
 
 CREATE INDEX idx_boards_owner ON boards (owner_id);
 CREATE INDEX idx_board_members_user ON board_members (user_id);
@@ -53,10 +32,12 @@ CREATE INDEX idx_cards_column_pos ON cards (column_id, position);
 CREATE INDEX idx_cards_board ON cards (board_id);
 
 CREATE UNIQUE INDEX one_owner_per_board
-    ON board_members(board_id)
+    ON board_members (board_id)
     WHERE user_role = 'owner';
 
-ALTER TABLE board_columns ADD UNIQUE (id, board_id);
+ALTER TABLE board_columns
+    ADD UNIQUE (id, board_id);
 ALTER TABLE cards
     ADD CONSTRAINT cards_column_board_fk
-        FOREIGN KEY (column_id, board_id) REFERENCES board_columns(id, board_id);
+        FOREIGN KEY (column_id, board_id) REFERENCES board_columns (id, board_id);
+
