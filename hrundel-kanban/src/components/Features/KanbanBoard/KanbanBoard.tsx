@@ -7,13 +7,37 @@ import Button from "../../UI/Button/Button";
 import styles from "./KanbanBoard.module.css";
 import cardMoveSound from '../../../assets/sounds/card-move.mp3';
 
-interface KanbanBoardProps {
-  board: Board;
-  onAddColumn?: (boardId: string, title: string) => void;
-  onDeleteColumn?: (boardId: string, columnId: string) => void;
-}
+// interface KanbanBoardProps {
+//   board: Board;
+//   onAddColumn?: (boardId: string, title: string) => void;
+//   onDeleteColumn?: (boardId: string, columnId: string) => void;
+// }
 
-export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: KanbanBoardProps) {
+// interface KanbanBoardProps {
+//     board: Board;
+//     onAddColumn?: (title: string) => void | Promise<void>;
+//     onDeleteColumn?: (columnId: string) => void | Promise<void>;
+//     onAddCard?: (columnId: string, title: string, description: string) => void | Promise<void>;
+//     onDeleteCard?: (cardId: string) => void | Promise<void>;
+//     onMoveCard?: (cardId: string, targetColumnId: string) => void | Promise<void>;
+// }
+
+interface KanbanBoardProps {
+    board: Board;
+    onAddColumn?: (title: string) => void | Promise<void>;
+    onDeleteColumn?: (columnId: string) => void | Promise<void>;
+    onAddCard?: (columnId: string, title: string, description: string) => void | Promise<void>;
+    onDeleteCard?: (cardId: string) => void | Promise<void>;
+    onMoveCard?: (cardId: string, targetColumnId: string) => void | Promise<void>;
+}
+export default function KanbanBoard({
+                                        board,
+                                        onAddColumn,
+                                        onDeleteColumn,
+                                        onAddCard,
+                                        onDeleteCard,
+                                        onMoveCard,
+                                    }: KanbanBoardProps) {
   const cardMoveAudioRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
     cardMoveAudioRef.current = new Audio(cardMoveSound);
@@ -58,40 +82,65 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
     setDragOverColumnId(null);
   }, []);
 
-  const handleDrop = useCallback(
-    async (e: DragEvent<HTMLDivElement>, targetColumnId: string) => {
-      e.preventDefault();
-      setDragOverColumnId(null);
+  // const handleDrop = useCallback(
+  //   async (e: DragEvent<HTMLDivElement>, targetColumnId: string) => {
+  //     e.preventDefault();
+  //     setDragOverColumnId(null);
+  //
+  //     if (!draggingCardId || !sourceColumnId) return;
+  //     if (sourceColumnId === targetColumnId) {
+  //       setDraggingCardId(null);
+  //       setSourceColumnId(null);
+  //       return;
+  //     }
+  //
+  //     if (cardMoveAudioRef.current) {
+  //       cardMoveAudioRef.current.currentTime = 0;
+  //       cardMoveAudioRef.current.play().catch(e => {
+  //         console.debug('Звук не проигрался:', e);
+  //       });
+  //     }
+  //
+  //     const srcCol = board.columns.find((c) => c.id === sourceColumnId)!;
+  //     const card = srcCol.cards.find((c) => c.id === draggingCardId)!;
+  //
+  //     const newColumns: Column[] = board.columns.map((col) => {
+  //       if (col.id === sourceColumnId) {
+  //         return { ...col, cards: col.cards.filter((c) => c.id !== draggingCardId) };
+  //       }
+  //       if (col.id === targetColumnId) {
+  //         return { ...col, cards: [...col.cards, card] };
+  //       }
+  //       return col;
+  //     });
+  //   },
+  //   [draggingCardId, sourceColumnId, board]
+  // );
 
-      if (!draggingCardId || !sourceColumnId) return;
-      if (sourceColumnId === targetColumnId) {
-        setDraggingCardId(null);
-        setSourceColumnId(null);
-        return;
-      }
+    const handleDrop = useCallback(
+        async (e: DragEvent<HTMLDivElement>, targetColumnId: string) => {
+            e.preventDefault();
+            setDragOverColumnId(null);
 
-      if (cardMoveAudioRef.current) {
-        cardMoveAudioRef.current.currentTime = 0;
-        cardMoveAudioRef.current.play().catch(e => {
-          console.debug('Звук не проигрался:', e);
-        });
-      }
+            if (!draggingCardId || !sourceColumnId) return;
+            if (sourceColumnId === targetColumnId) {
+                setDraggingCardId(null);
+                setSourceColumnId(null);
+                return;
+            }
 
-      const srcCol = board.columns.find((c) => c.id === sourceColumnId)!;
-      const card = srcCol.cards.find((c) => c.id === draggingCardId)!;
+            if (cardMoveAudioRef.current) {
+                cardMoveAudioRef.current.currentTime = 0;
+                cardMoveAudioRef.current.play().catch(() => {});
+            }
 
-      const newColumns: Column[] = board.columns.map((col) => {
-        if (col.id === sourceColumnId) {
-          return { ...col, cards: col.cards.filter((c) => c.id !== draggingCardId) };
-        }
-        if (col.id === targetColumnId) {
-          return { ...col, cards: [...col.cards, card] };
-        }
-        return col;
-      });
-    },
-    [draggingCardId, sourceColumnId, board]
-  );
+            await onMoveCard?.(draggingCardId, targetColumnId);
+
+            setDraggingCardId(null);
+            setSourceColumnId(null);
+        },
+        [draggingCardId, sourceColumnId, onMoveCard],
+    );
 
   const openAddModal = useCallback((columnId: string) => {
     setAddColumnId(columnId);
@@ -101,34 +150,50 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
     setAddModal(true);
   }, []);
 
-  const handleAddCard = useCallback(() => {
-    if (!newTitle.trim()) {
-      setAddError("Введите название задачи");
-      return;
-    }
-    if (!addColumnId) return;
+  // const handleAddCard = useCallback(() => {
+  //   if (!newTitle.trim()) {
+  //     setAddError("Введите название задачи");
+  //     return;
+  //   }
+  //   if (!addColumnId) return;
+  //
+  //   const newCard = {
+  //     id: `card-${Date.now()}`,
+  //     title: newTitle.trim(),
+  //     description: newDescription.trim(),
+  //   };
+  //
+  //   const newColumns = board.columns.map((col) =>
+  //     col.id === addColumnId
+  //       ? { ...col, cards: [...col.cards, newCard] }
+  //       : col
+  //   );
+  //
+  //   setAddModal(false);
+  // }, [newTitle, newDescription, addColumnId, board]);
+    const handleAddCard = useCallback(async () => {
+        if (!newTitle.trim()) {
+            setAddError("Введите название задачи");
+            return;
+        }
+        if (!addColumnId || !onAddCard) return;
 
-    const newCard = {
-      id: `card-${Date.now()}`,
-      title: newTitle.trim(),
-      description: newDescription.trim(),
+        await onAddCard(addColumnId, newTitle.trim(), newDescription.trim());
+        setAddModal(false);
+    }, [newTitle, newDescription, addColumnId, onAddCard]);
+
+  // const handleAddColumnClick = async () => {
+  //   if (!newColumnTitle.trim() || !onAddColumn) return;
+  //   await onAddColumn(board.id, newColumnTitle.trim());
+  //   setNewColumnTitle("");
+  //   setIsAddingColumn(false);
+  // };
+    const handleAddColumnClick = async () => {
+        if (!newColumnTitle.trim() || !onAddColumn) return;
+        await onAddColumn(newColumnTitle.trim());
+        setNewColumnTitle("");
+        setIsAddingColumn(false);
     };
-
-    const newColumns = board.columns.map((col) =>
-      col.id === addColumnId
-        ? { ...col, cards: [...col.cards, newCard] }
-        : col
-    );
-
-    setAddModal(false);
-  }, [newTitle, newDescription, addColumnId, board]);
-
-  const handleAddColumnClick = async () => {
-    if (!newColumnTitle.trim() || !onAddColumn) return;
-    await onAddColumn(board.id, newColumnTitle.trim());
-    setNewColumnTitle("");
-    setIsAddingColumn(false);
-  };
 
   return (
     <div className={styles.board}>
@@ -140,7 +205,7 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
           <KanbanColumn
             key={column.id}
             column={column}
-            boardId={board.id}
+            // boardId={board.id}
             draggingId={draggingCardId}
             dragOverColumnId={dragOverColumnId}
             onDragStart={handleDragStart}
@@ -149,7 +214,7 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
             onDragLeave={handleDragLeave}
             onAddCard={openAddModal}
             onDeleteColumn={onDeleteColumn}
-          />
+            onDeleteCard={onDeleteCard}          />
         ))}
 
         <div className={styles.addColumnWrapper}>
@@ -168,8 +233,8 @@ export default function KanbanBoard({ board, onAddColumn, onDeleteColumn }: Kanb
                 <button onClick={handleAddColumnClick} className={styles.addBtn}>
                   Добавить
                 </button>
-                <button
-                  onClick={() => { setIsAddingColumn(false); setNewColumnTitle(""); }}
+                <button 
+                  onClick={() => { setIsAddingColumn(false); setNewColumnTitle(""); }} 
                   className={styles.cancelBtn}
                 >
                   Отмена

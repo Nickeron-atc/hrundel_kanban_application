@@ -4,10 +4,16 @@ import Input from "../../../components/UI/Input/Input";
 import Button from "../../../components/UI/Button/Button";
 import Modal from "../../../components/UI/Modal/Modal";
 
+// interface AddBoardModalProps {
+//   visible: boolean;
+//   onClose: () => void;
+//   onAdd: (title: string) => Promise<void>;
+// }
+
 interface AddBoardModalProps {
   visible: boolean;
   onClose: () => void;
-  onAdd: (title: string) => Promise<void>;
+  onAdd: (title: string) => Promise<{ ok: boolean; message?: string }>;
 }
 
 export default function AddBoardModal({ visible, onClose, onAdd }: AddBoardModalProps) {
@@ -15,23 +21,41 @@ export default function AddBoardModal({ visible, onClose, onAdd }: AddBoardModal
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // const handleSubmit = async () => {
+  //   if (!title.trim()) {
+  //     setError("Укажите название доски");
+  //     return;
+  //   }
+  //
+  //   setLoading(true);
+  //   setError("");
+  //   try {
+  //     await onAdd(title.trim());
+  //     setTitle("");
+  //     onClose();
+  //   } catch (err) {
+  //     setError((err as Error).message || "Не удалось создать доску");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async () => {
     if (!title.trim()) {
       setError("Укажите название доски");
       return;
     }
-
     setLoading(true);
     setError("");
-    try {
-      await onAdd(title.trim());
-      setTitle("");
-      onClose();
-    } catch (err) {
-      setError((err as Error).message || "Не удалось создать доску");
-    } finally {
-      setLoading(false);
+    const result = await onAdd(title.trim());
+    setLoading(false);
+
+    if (!result.ok) {
+      setError(result.message || "Не удалось создать доску");
+      return;
     }
+    setTitle("");
+    onClose();
   };
 
   return (

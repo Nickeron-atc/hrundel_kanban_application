@@ -4,10 +4,17 @@ export interface ApiResponse<T = unknown> {
   message?: string;
 }
 
+// export interface Card {
+//   id: string;
+//   title: string;
+//   description: string;
+// }
+
 export interface Card {
   id: string;
   title: string;
   description: string;
+  columnId?: string;
 }
 
 export interface Column {
@@ -106,12 +113,53 @@ export const api = {
       body: JSON.stringify({ name }),
     });
   },
+
+  /** DELETE /api/boards/:boardId */
+  deleteBoard(boardId: string): Promise<ApiResponse<{ deleted: string }>> {
+    return request(`/boards/${boardId}`, { method: "DELETE" });
+  },
+
+  /** POST /api/boards/:boardId/columns/:columnId/cards — { title, description } → { card } */
+  createCard(
+      boardId: string,
+      columnId: string,
+      title: string,
+      description: string,
+  ): Promise<ApiResponse<{ card: Card }>> {
+    return request(`/boards/${boardId}/columns/${columnId}/cards`, {
+      method: "POST",
+      body: JSON.stringify({ title, description }),
+    });
+  },
+
+  /** DELETE /api/boards/:boardId/cards/:cardId */
+  deleteCard(
+      boardId: string,
+      cardId: string,
+  ): Promise<ApiResponse<{ deleted: string }>> {
+    return request(`/boards/${boardId}/cards/${cardId}`, {
+      method: "DELETE",
+    });
+  },
+
+  // /** PATCH /api/boards/:boardId/cards — переместить карточку */
+  // moveCard(
+  //   boardId: string,
+  //   cardId: string,
+  //   targetColumnId: string,
+  // ): Promise<ApiResponse<{ status: string }>> {
+  //   return request(`/boards/${boardId}/cards`, {
+  //     method: "PATCH",
+  //     body: JSON.stringify({ cardId, targetColumnId }),
+  //   });
+  // },
+
   /** PATCH /api/boards/:boardId/cards — переместить карточку */
   moveCard(
-    boardId: string,
-    cardId: string,
-    targetColumnId: string,
-  ): Promise<ApiResponse<{ status: string }>> {
+      boardId: string,
+      cardId: string,
+      targetColumnId: string,
+  ): Promise<ApiResponse<{ cardId: string; targetColumnId: string }>> {
     return request(`/boards/${boardId}/cards`, {
       method: "PATCH",
       body: JSON.stringify({ cardId, targetColumnId }),

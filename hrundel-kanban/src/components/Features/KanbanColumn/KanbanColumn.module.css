@@ -76,6 +76,26 @@
   font-family: var(--font);
 }
 
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border: 1.5px dashed var(--color-border);
+  background: rgba(255, 100, 0, 0.1);
+  transition: all var(--transition);
+  width: 100%;
+  font-family: var(--font);
+  /*margin-left: auto;*/
+  right: 8px;
+}
+
 .addBtn:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);

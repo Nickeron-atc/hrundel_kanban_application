@@ -24,20 +24,3 @@ CREATE TABLE IF NOT EXISTS cards (
     description TEXT,
     column_id INTEGER REFERENCES columns(id) ON DELETE CASCADE
     );
-
-CREATE INDEX idx_boards_owner ON boards (owner_id);
-CREATE INDEX idx_board_members_user ON board_members (user_id);
-CREATE INDEX idx_board_columns_board_pos ON board_columns (board_id, position);
-CREATE INDEX idx_cards_column_pos ON cards (column_id, position);
-CREATE INDEX idx_cards_board ON cards (board_id);
-
-CREATE UNIQUE INDEX one_owner_per_board
-    ON board_members (board_id)
-    WHERE user_role = 'owner';
-
-ALTER TABLE board_columns
-    ADD UNIQUE (id, board_id);
-ALTER TABLE cards
-    ADD CONSTRAINT cards_column_board_fk
-        FOREIGN KEY (column_id, board_id) REFERENCES board_columns (id, board_id);
-
