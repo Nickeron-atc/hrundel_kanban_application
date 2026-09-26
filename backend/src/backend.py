@@ -6,11 +6,80 @@ Hrundel Kanban — Flask backend (stub endpoints).
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from psycopg2.pool import SimpleConnectionPool
+from contextlib import contextmanager
 
 app = Flask(__name__)
 
 # Разрешаем CORS для фронтенда на localhost (Vite dev-server).
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# ---------------------------------------------------------------------------
+# DB
+# ---------------------------------------------------------------------------
+
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://postgres:postgres@localhost:5432/hrundeldb",
+)
+pool = SimpleConnectionPool(1, 10, dsn=DATABASE_URL)
+
+@contextmanager
+def db():
+    conn = pool.getconn()
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback() # роллбэк при исключении
+        raise
+    finally:
+        pool.putconn(conn)
+
+def query_one(sql, params=()):
+    with db() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(sql, params)
+        return cur.fetchone()
+
+def query_all(sql, params=()):
+    with db() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(sql, params)
+        return cur.fetchall()
+
+def execute(sql, params=(), returning=False):
+    with db() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(sql, params)
+        return cur.fetchone() if returning else None
+
+def get_current_user_id():
+    """
+    Заглушка. Токен формата 'fake-token-<name>-123'.
+    TODO: Auth — заменить на разбор JWT/session и SELECT id FROM users WHERE ...
+    """
+    auth = request.headers.get("Authorization", "")
+    token = auth.replace("Bearer ", "").strip()
+    if token.startswith("fake-token-"):
+        name = token[len("fake-token-"):].rsplit("-", 1)[0]
+        row = query_one("SELECT id FROM users WHERE name = %s", (name,))
+        if row:
+            return row["id"]
+
+    row = query_one("SELECT id FROM users LIMIT 1")
+    return row["id"] if row else None
+
+def user_owns_board(user_id, board_id):
+    row = query_one(
+        """
+        SELECT 1 FROM board_members
+        WHERE board_id = %s AND user_id = %s
+          AND user_role IN ('owner','admin','member')
+        """,
+        (board_id, user_id),
+    )
+    return row is not None
 
 # ---------------------------------------------------------------------------
 # Вспомогательные функции
