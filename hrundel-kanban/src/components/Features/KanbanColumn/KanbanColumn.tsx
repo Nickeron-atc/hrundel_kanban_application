@@ -5,7 +5,7 @@ import styles from "./KanbanColumn.module.css";
 
 interface KanbanColumnProps {
   column: Column;
-  boardId?: string; // ← ДОБАВЛЕНО
+  boardId?: string;
   draggingId: string | null;
   dragOverColumnId: string | null;
   onDragStart: (e: React.DragEvent<HTMLDivElement>, cardId: string) => void;
@@ -13,7 +13,7 @@ interface KanbanColumnProps {
   onDrop: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
   onDragLeave: () => void;
   onAddCard: (columnId: string) => void;
-  onDeleteColumn?: (boardId: string, columnId: string) => void; // ← ДОБАВЛЕНО
+  onDeleteColumn?: (boardId: string, columnId: string) => void;
 }
 
 export default function KanbanColumn({ 
@@ -26,7 +26,7 @@ export default function KanbanColumn({
   onDrop, 
   onDragLeave, 
   onAddCard,
-  onDeleteColumn // ← ДОБАВЛЕНО
+  onDeleteColumn
 }: KanbanColumnProps) {
   const isDragOver = dragOverColumnId === column.id;
 
@@ -43,14 +43,12 @@ export default function KanbanColumn({
         <div className={styles.titleRow}>
           <span className={styles.title}>{column.title}</span>
           <span className={styles.count}>{column.cards.length}</span>
-          {/* 🔥 КНОПКА МУСОРКИ - добавлена здесь */}
           {boardId && onDeleteColumn && (
             <button
               onClick={() => onDeleteColumn(boardId, column.id)}
               className={styles.deleteButton}
               title="Удалить колонку"
             >
-              🗑️
             </button>
           )}
         </div>

@@ -1,9 +1,3 @@
-/**
- * Hrundel Kanban — API client.
- * Все методы возвращают Promise<ApiResponse<T>>.
- * Все запросы идут на /api/* и проксируются Vite-сервером на Flask (localhost:5000).
- */
-
 export interface ApiResponse<T = unknown> {
   status: "ok" | "error";
   data: T;
