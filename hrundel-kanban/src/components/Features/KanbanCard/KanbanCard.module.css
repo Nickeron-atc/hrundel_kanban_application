@@ -38,3 +38,30 @@
   line-height: 1.5;
   word-break: break-word;
 }
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.deleteButton {
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 4px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.card:hover .deleteButton {
+  opacity: 1;
+}
+
+.deleteButton:hover {
+  color: #e53935;
+}
