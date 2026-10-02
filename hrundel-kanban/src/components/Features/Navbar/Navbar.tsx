@@ -3,6 +3,7 @@ import { auth, api } from "../../../services/api";
 import Button from "../../UI/Button/Button";
 import styles from "./Navbar.module.css";
 import hrundel from "../../../assets/hrundel.svg";
+import moisey from "../../../assets/moisey.png"
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -24,8 +25,8 @@ export default function Navbar() {
 
         <div className={styles.links}>
           {loggedIn && (
-            <NavLink
-              to="/worksession"
+              <NavLink
+                  to="/worksession"
               className={({ isActive }) =>
                 [styles.link, isActive ? styles.active : ""].filter(Boolean).join(" ")
               }
@@ -44,10 +45,19 @@ export default function Navbar() {
         </div>
 
         <div className={styles.actions}>
+          {loggedIn ? (<NavLink to={loggedIn ? "/worksession" : "/login"} className={styles.logo}>
+            <div className="row-container">
+              <div className="row-item"><img src={moisey} alt="Moisey" className={styles.logoIcon}/></div>
+              <div className="row-item">username</div>
+            </div>
+          </NavLink>) : (<div></div>)
+          }
           {loggedIn ? (
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              Выйти
-            </Button>
+              <div>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                Выйти
+                </Button>
+            </div>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
