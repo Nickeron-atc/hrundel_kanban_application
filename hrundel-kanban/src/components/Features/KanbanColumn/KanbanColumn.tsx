@@ -57,25 +57,18 @@ export default function KanbanColumn({
         <div className={styles.titleRow}>
           <span className={styles.title}>{column.title}</span>
           <span className={styles.count}>{column.cards.length}</span>
-          {/*{boardId && onDeleteColumn && (*/}
-          {/*  <button*/}
-          {/*    onClick={() => onDeleteColumn(boardId, column.id)}*/}
-          {/*    className={styles.deleteButton}*/}
-          {/*    title="Удалить колонку"*/}
-          {/*  >*/}
-          {/*  </button>*/}
-          {/*)}*/}
-
-          {onDeleteColumn && (
-              <button
-                  onClick={() => onDeleteColumn(column.id)}
-                  className={styles.deleteButton}
-                  title="Удалить колонку"
-              >
-                ✕
-              </button>
-          )}
         </div>
+        
+        {onDeleteColumn && (
+          <button
+            onClick={() => onDeleteColumn(column.id)}
+            className={styles.deleteButton}
+            title="Удалить колонку"
+            aria-label="Удалить колонку"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       <div className={styles.cards}>
