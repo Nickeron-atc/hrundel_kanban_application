@@ -18,11 +18,20 @@ export default function WorkSession() {
   const [deleteCardDialogOpen, setDeleteCardDialogOpen] = useState(false);
   const [cardIdToDelete, setCardIdToDelete] = useState<string | null>(null);
 
+  // useEffect(() => {
+  //   if (!auth.isLoggedIn()) {
+  //     navigate("/login", { replace: true });
+  //   }
+  // }, [navigate]);
+
   useEffect(() => {
     if (!auth.isLoggedIn()) {
       navigate("/login", { replace: true });
+    } else {
+      // Гарантируем, что у нас свежие доски именно для текущего пользователя
+      reloadBoards();
     }
-  }, [navigate]);
+  }, [navigate, reloadBoards]);
 
   const currentBoard = boards.find((b) => b.id === currentBoardId) || null;
 

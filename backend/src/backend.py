@@ -54,19 +54,39 @@ def execute(sql, params=(), returning=False):
         cur.execute(sql, params)
         return cur.fetchone() if returning else None
 
+# def get_current_user_id():
+#     """
+#     Заглушка. Токен формата 'fake-token-<name>-123'.
+#     TODO: Auth — заменить на разбор JWT/session и SELECT id FROM users WHERE ...
+#     """
+#     auth = request.headers.get("Authorization", "")
+#     token = auth.replace("Bearer ", "").strip()
+#     if token.startswith("fake-token-"):
+#         name = token[len("fake-token-"):].rsplit("-", 1)[0]
+#         row = query_one("SELECT id FROM users WHERE name = %s", (name,))
+#         if row:
+#             return row["id"]
+#
+#     row = query_one("SELECT id FROM users LIMIT 1")
+#     return row["id"] if row else None
+
 def get_current_user_id():
     """
-    Заглушка. Токен формата 'fake-token-<name>-123'.
-    TODO: Auth — заменить на разбор JWT/session и SELECT id FROM users WHERE ...
+    Извлекает ID пользователя из Bearer-токена.
+    Токен имеет формат 'fake-token-<login>-100'.
     """
     auth = request.headers.get("Authorization", "")
     token = auth.replace("Bearer ", "").strip()
+
     if token.startswith("fake-token-"):
-        name = token[len("fake-token-"):].rsplit("-", 1)[0]
-        row = query_one("SELECT id FROM users WHERE name = %s", (name,))
+        # Извлекаем логин из токена
+        login = token[len("fake-token-"):].rsplit("-", 1)[0]
+        # ИСПРАВЛЕНИЕ: используем столбец 'login' вместо 'name'
+        row = query_one("SELECT id FROM users WHERE login = %s", (login,))
         if row:
             return row["id"]
 
+    # Фоллбэк для тестов (возвращает первого пользователя в БД)
     row = query_one("SELECT id FROM users LIMIT 1")
     return row["id"] if row else None
 
@@ -151,12 +171,34 @@ def login():
     if not name or not password:
         return err("Заполните все поля")
 
-    user = query_one("SELECT id, password_hash FROM users WHERE full_name = %s", (name,))
+    # user = query_one("SELECT id, password_hash FROM users WHERE full_name = %s", (name,))
+    user = query_one("SELECT id, password_hash FROM users WHERE login = %s", (name,))
     if not user or not check_password_hash(user["password_hash"], password):
         return err("Неверный логин или пароль", 401)
 
     return jsonify({"status": "ok", "data": {"auth_token": f"fake-token-{name}-123"}}), 200
 
+
+# @app.route("/api/register", methods=["POST"])
+# def register():
+#     body = request.get_json(silent=True) or {}
+#     name = (body.get("login") or "").strip()
+#     password = (body.get("password") or "").strip()
+#     full_name = (body.get("fullName") or "").strip() or name
+#     if not name or not password:
+#         return err("Заполните все поля")
+#     if len(password) < 4:
+#         return err("Пароль должен быть не менее 4 символов")
+#
+#     if query_one("SELECT 1 FROM users WHERE full_name = %s", (name,)):
+#         return err("Логин уже занят", 409)
+#
+#     row = execute(
+#         "INSERT INTO users (login, password_hash) VALUES (%s, %s) RETURNING id",
+#         (name, generate_password_hash(password)),
+#         returning=True,
+#     )
+#     return jsonify({"status": "ok", "data": {"id": row["id"]}}), 201
 
 @app.route("/api/register", methods=["POST"])
 def register():
@@ -164,17 +206,34 @@ def register():
     name = (body.get("login") or "").strip()
     password = (body.get("password") or "").strip()
     full_name = (body.get("fullName") or "").strip() or name
+
     if not name or not password:
         return err("Заполните все поля")
+
+    # Защита от DoS: ограничиваем длину пароля до хеширования
+    if len(password) > 128:
+        return err("Пароль слишком длинный (макс. 128 символов)")
+
     if len(password) < 4:
         return err("Пароль должен быть не менее 4 символов")
 
-    if query_one("SELECT 1 FROM users WHERE full_name = %s", (name,)):
+    # if query_one("SELECT 1 FROM users WHERE full_name = %s", (name,)):
+    #     return err("Логин уже занят", 409)
+    #
+    # row = execute(
+    #     "INSERT INTO users (login, password_hash) VALUES (%s, %s) RETURNING id",
+    #     # ИЗМЕНЕНИЕ ЗДЕСЬ:
+    #     (name, generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)),
+    #     returning=True,
+    # )
+
+    if query_one("SELECT 1 FROM users WHERE login = %s", (name,)):
         return err("Логин уже занят", 409)
 
+
     row = execute(
-        "INSERT INTO users (login, password_hash) VALUES (%s, %s) RETURNING id",
-        (name, generate_password_hash(password)),
+        "INSERT INTO users (login, password_hash, full_name) VALUES (%s, %s, %s) RETURNING id",
+        (name, generate_password_hash(password, method='pbkdf2:sha256', salt_length=8), full_name),
         returning=True,
     )
     return jsonify({"status": "ok", "data": {"id": row["id"]}}), 201
@@ -279,45 +338,103 @@ MOCK_BOARDS = [
 
 # backend/src/backend.py - обновляем функцию get_boards
 
+# @app.route("/api/boards", methods=["GET"])
+# def get_boards():
+#     user_id = get_current_user_id()
+#     if not user_id:
+#         return err("Не авторизован", 401)
+#
+#     boards = query_all(
+#         """
+#         SELECT b.id, b.title
+#         FROM boards b
+#                  JOIN board_members bm ON bm.board_id = b.id
+#         WHERE bm.user_id = %s
+#         ORDER BY b.created_at
+#         """,
+#         (user_id,),
+#     )
+#
+#     for b in boards:
+#         b["id"] = str(b["id"])
+#         cols = query_all(
+#             "SELECT id, title, position FROM board_columns WHERE board_id = %s ORDER BY position, id",
+#             (b["id"],),
+#         )
+#
+#         for c in cols:
+#             c["id"] = str(c["id"])
+#             cards = query_all(
+#                 """
+#                 SELECT id, title, description, position, color
+#                 FROM cards WHERE column_id = %s
+#                 ORDER BY position, id
+#                 """,
+#                 (c["id"],),
+#             )
+#
+#             for card in cards:
+#                 card["id"] = str(card["id"])
+#
+#                 # НОВОЕ: Загружаем теги для карточки
+#                 tags = query_all(
+#                     """
+#                     SELECT t.id, t.name, t.color
+#                     FROM tags t
+#                              JOIN card_tags ct ON ct.tag_id = t.id
+#                     WHERE ct.card_id = %s
+#                     """,
+#                     (card["id"],),
+#                 )
+#
+#                 for tag in tags:
+#                     tag["id"] = str(tag["id"])
+#
+#                 card["tags"] = tags
+#
+#             c["cards"] = cards
+#
+#         b["columns"] = cols
+#
+#     return jsonify({"status": "ok", "data": {"boards": boards}}), 200
+
 @app.route("/api/boards", methods=["GET"])
 def get_boards():
     user_id = get_current_user_id()
     if not user_id:
         return err("Не авторизован", 401)
 
+    # ИСПРАВЛЕНИЕ: используем user_id из таблицы boards, убираем board_members
     boards = query_all(
         """
-        SELECT b.id, b.title
-        FROM boards b
-                 JOIN board_members bm ON bm.board_id = b.id
-        WHERE bm.user_id = %s
-        ORDER BY b.created_at
+        SELECT id, title
+        FROM boards
+        WHERE user_id = %s
+        ORDER BY id
         """,
         (user_id,),
     )
 
     for b in boards:
         b["id"] = str(b["id"])
+        # ИСПРАВЛЕНИЕ: таблица называется columns, убираем position
         cols = query_all(
-            "SELECT id, title, position FROM board_columns WHERE board_id = %s ORDER BY position, id",
+            "SELECT id, title FROM columns WHERE board_id = %s ORDER BY id",
             (b["id"],),
         )
-
         for c in cols:
             c["id"] = str(c["id"])
+            # ИСПРАВЛЕНИЕ: убираем position из выборки карточек
             cards = query_all(
                 """
-                SELECT id, title, description, position, color
+                SELECT id, title, description, color
                 FROM cards WHERE column_id = %s
-                ORDER BY position, id
+                ORDER BY id
                 """,
                 (c["id"],),
             )
-
             for card in cards:
                 card["id"] = str(card["id"])
-
-                # НОВОЕ: Загружаем теги для карточки
                 tags = query_all(
                     """
                     SELECT t.id, t.name, t.color
@@ -327,14 +444,10 @@ def get_boards():
                     """,
                     (card["id"],),
                 )
-
                 for tag in tags:
                     tag["id"] = str(tag["id"])
-
                 card["tags"] = tags
-
             c["cards"] = cards
-
         b["columns"] = cols
 
     return jsonify({"status": "ok", "data": {"boards": boards}}), 200
@@ -348,26 +461,53 @@ def create_board():
     body = request.get_json(silent=True)
     if not body:
         return err("Некорректный JSON")
+
     title = (body.get("name") or "").strip()
     if not title:
         return err("Укажите название доски")
 
-    with db() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute(
-            "INSERT INTO boards (owner_id, title) VALUES (%s, %s) RETURNING id, title",
-            (user_id, title),
-        )
-        board = cur.fetchone()
-        cur.execute(
-            "INSERT INTO board_members (board_id, user_id, user_role) VALUES (%s, %s, 'owner')",
-            (board["id"], user_id),
-        )
+    # ИСПРАВЛЕНИЕ: используем user_id вместо owner_id, чтобы соответствовать init.sql
+    row = execute(
+        "INSERT INTO boards (user_id, title) VALUES (%s, %s) RETURNING id, title",
+        (user_id, title),
+        returning=True,
+    )
 
     return jsonify({"status": "ok", "data": {"board": {
-        "id": str(board["id"]),
-        "title": board["title"],
+        "id": str(row["id"]),
+        "title": row["title"],
         "columns": [],
     }}}), 201
+
+# @app.route("/api/boards", methods=["POST"])
+# def create_board():
+#     user_id = get_current_user_id()
+#     if not user_id:
+#         return err("Не авторизован", 401)
+#
+#     body = request.get_json(silent=True)
+#     if not body:
+#         return err("Некорректный JSON")
+#     title = (body.get("name") or "").strip()
+#     if not title:
+#         return err("Укажите название доски")
+#
+#     with db() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+#         cur.execute(
+#             "INSERT INTO boards (owner_id, title) VALUES (%s, %s) RETURNING id, title",
+#             (user_id, title),
+#         )
+#         board = cur.fetchone()
+#         cur.execute(
+#             "INSERT INTO board_members (board_id, user_id, user_role) VALUES (%s, %s, 'owner')",
+#             (board["id"], user_id),
+#         )
+#
+#     return jsonify({"status": "ok", "data": {"board": {
+#         "id": str(board["id"]),
+#         "title": board["title"],
+#         "columns": [],
+#     }}}), 201
 
 @app.route("/api/boards/<int:board_id>", methods=["DELETE"])
 def delete_board(board_id: int):
@@ -447,16 +587,49 @@ def delete_board(board_id: int):
 #
 #     return jsonify({"status": "ok", "data": {"column": new_column}}), 201
 
+# @app.route("/api/boards/<int:board_id>/columns", methods=["POST"])
+# def create_column(board_id: int):
+#     user_id = get_current_user_id()
+#     if not user_id or not user_owns_board(user_id, board_id):
+#         return err("Доска не найдена или нет прав", 404)
+#
+#     body = request.get_json(silent=True) or {}
+#     title = (body.get("title") or "").strip()
+#     if not title:
+#         return err("Укажите название колонки")
+
 @app.route("/api/boards/<int:board_id>/columns", methods=["POST"])
 def create_column(board_id: int):
     user_id = get_current_user_id()
-    if not user_id or not user_owns_board(user_id, board_id):
+    if not user_id:
+        return err("Не авторизован", 401)
+
+    # Проверка, что пользователь владеет доской
+    board = query_one("SELECT id FROM boards WHERE id = %s AND user_id = %s", (board_id, user_id))
+    if not board:
         return err("Доска не найдена или нет прав", 404)
 
     body = request.get_json(silent=True) or {}
     title = (body.get("title") or "").strip()
     if not title:
         return err("Укажите название колонки")
+
+    # ИСПРАВЛЕНИЕ: используем таблицу columns и убираем position
+    row = execute(
+        """
+        INSERT INTO columns (board_id, title)
+        VALUES (%s, %s)
+            RETURNING id, title
+        """,
+        (board_id, title),
+        returning=True,
+    )
+
+    return jsonify({"status": "ok", "data": {"column": {
+        "id": str(row["id"]),
+        "title": row["title"],
+        "cards": [],
+    }}}), 201
 
     # row = execute(
     #     """
@@ -508,14 +681,35 @@ def create_column(board_id: int):
 #
 #     return jsonify({"status": "ok", "data": {"deleted": column_id}}), 200
 
+# @app.route("/api/boards/<int:board_id>/columns/<int:column_id>", methods=["DELETE"])
+# def delete_column(board_id: int, column_id: int):
+#     user_id = get_current_user_id()
+#     if not user_id or not user_owns_board(user_id, board_id):
+#         return err("Доска не найдена или нет прав", 404)
+#
+#     row = execute(
+#         "DELETE FROM board_columns WHERE id = %s AND board_id = %s RETURNING id",
+#         (column_id, board_id),
+#         returning=True,
+#     )
+#     if not row:
+#         return err("Колонка не найдена", 404)
+#     return ok({"deleted": column_id})
+
 @app.route("/api/boards/<int:board_id>/columns/<int:column_id>", methods=["DELETE"])
 def delete_column(board_id: int, column_id: int):
     user_id = get_current_user_id()
-    if not user_id or not user_owns_board(user_id, board_id):
+    if not user_id:
+        return err("Не авторизован", 401)
+
+    # Проверка прав
+    board = query_one("SELECT id FROM boards WHERE id = %s AND user_id = %s", (board_id, user_id))
+    if not board:
         return err("Доска не найдена или нет прав", 404)
 
+    # ИСПРАВЛЕНИЕ: используем таблицу columns
     row = execute(
-        "DELETE FROM board_columns WHERE id = %s AND board_id = %s RETURNING id",
+        "DELETE FROM columns WHERE id = %s AND board_id = %s RETURNING id",
         (column_id, board_id),
         returning=True,
     )

@@ -6,6 +6,7 @@ import { AppModal } from "../../UI/AppModal/AppModal";
 import { ConfirmDialog } from "../../UI/ConfirmDialog/ConfirmDialog";
 import CreateBoardModal from "../CreateBoardModal/CreateBoardModal";
 import Button from "../../UI/Button/Button";
+import { useBoards } from "../../../contexts/BoardContext";
 
 interface BoardsListModalProps {
     open: boolean;
@@ -20,31 +21,57 @@ export default function BoardsListModal({
                                             onSelectBoard,
                                             currentBoardId,
                                         }: BoardsListModalProps) {
-    const [boards, setBoards] = useState<Board[]>([]);
+    // const [boards, setBoards] = useState<Board[]>([]);
     const [loading, setLoading] = useState(false);
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [boardIdToDelete, setBoardIdToDelete] = useState<string | null>(null);
 
-    const loadBoards = async () => {
-        setLoading(true);
-        const res = await api.getBoards();
-        if (res.status === "ok") {
-            setBoards(res.data.boards);
-        }
-        setLoading(false);
-    };
+    // const loadBoards = async () => {
+    //     setLoading(true);
+    //     const res = await api.getBoards();
+    //     if (res.status === "ok") {
+    //         setBoards(res.data.boards);
+    //     }
+    //     setLoading(false);
+    // };
 
+    const { boards, reloadBoards, setCurrentBoardId } = useBoards();
+
+    // useEffect(() => {
+    //     if (open) {
+    //         loadBoards();
+    //     }
+    // }, [open]);
+
+    // Было: loadBoards();
+// Стало:
     useEffect(() => {
         if (open) {
-            loadBoards();
+            reloadBoards();
         }
-    }, [open]);
+    }, [open, reloadBoards]);
+
+    // const handleCreateBoard = async (title: string) => {
+    //     const res = await api.createBoard(title);
+    //     if (res.status === "ok") {
+    //         await loadBoards();
+    //         setCreateModalOpen(false);
+    //         return { ok: true };
+    //     }
+    //     return { ok: false, message: res.message };
+    // };
 
     const handleCreateBoard = async (title: string) => {
         const res = await api.createBoard(title);
         if (res.status === "ok") {
-            await loadBoards();
+            await reloadBoards(); // Обновляем глобальный список досок
+
+            // Автоматически выбираем только что созданную доску
+            if (res.data?.board?.id) {
+                setCurrentBoardId(res.data.board.id);
+            }
+
             setCreateModalOpen(false);
             return { ok: true };
         }

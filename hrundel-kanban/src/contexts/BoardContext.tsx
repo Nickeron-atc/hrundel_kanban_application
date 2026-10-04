@@ -19,16 +19,33 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     const [currentBoardId, setCurrentBoardId] = useState<string | null>(null);
     const [isBoardsModalOpen, setIsBoardsModalOpen] = useState(false);
 
+    // const reloadBoards = async () => {
+    //     const res = await api.getBoards();
+    //     if (res.status === "ok") {
+    //         setBoards(res.data.boards);
+    //         if (res.data.boards.length > 0 && !currentBoardId) {
+    //             setCurrentBoardId(res.data.boards[0].id);
+    //         }
+    //     }
+    // };
+
+
     const reloadBoards = async () => {
         const res = await api.getBoards();
         if (res.status === "ok") {
             setBoards(res.data.boards);
-            if (res.data.boards.length > 0 && !currentBoardId) {
+
+            // Проверяем, принадлежит ли текущая выбранная доска новому списку
+            const hasCurrent = res.data.boards.some((b) => b.id === currentBoardId);
+
+            if (!hasCurrent && res.data.boards.length > 0) {
+                // Если нет (или это первый вход), выбираем первую доску нового пользователя
                 setCurrentBoardId(res.data.boards[0].id);
+            } else if (res.data.boards.length === 0) {
+                setCurrentBoardId(null);
             }
         }
     };
-
     useEffect(() => {
         if (localStorage.getItem("auth_token")) {
             reloadBoards();
