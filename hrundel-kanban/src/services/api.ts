@@ -10,11 +10,30 @@ export interface ApiResponse<T = unknown> {
 //   description: string;
 // }
 
+// export interface Card {
+//   id: string;
+//   title: string;
+//   description: string;
+//   columnId?: string;
+// }
+
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface Card {
   id: string;
   title: string;
   description: string;
   columnId?: string;
+  color?: string; // Добавляем опциональное поле цвета
+  tags?: Tag[];   // Добавляем опциональный массив тегов
+  creator?: {     // Добавляем опциональную информацию о создателе
+    name: string;
+    avatarUrl: string;
+  };
 }
 
 export interface Column {
