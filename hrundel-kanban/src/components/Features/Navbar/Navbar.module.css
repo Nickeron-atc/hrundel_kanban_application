@@ -140,24 +140,40 @@
   border-color: rgba(255, 122, 0, 0.35);
 }
 
-/* Аватарка пользователя — КРУГЛАЯ, ФИКСИРОВАННОГО РАЗМЕРА */
-.userAvatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(255, 122, 0, 0.3);
-  flex-shrink: 0;
-  display: block;
+/*!* Аватарка пользователя — КРУГЛАЯ, ФИКСИРОВАННОГО РАЗМЕРА *!*/
+/*.userAvatar {*/
+/*  width: 32px;*/
+/*  height: 32px;*/
+/*  border-radius: 50%;*/
+/*  object-fit: cover;*/
+/*  border: 2px solid rgba(255, 122, 0, 0.3);*/
+/*  flex-shrink: 0;*/
+/*  display: block;*/
+/*}*/
+
+/*!* Имя пользователя рядом с аватаркой *!*/
+/*.userName {*/
+/*  font-size: 13px;*/
+/*  font-weight: 500;*/
+/*  color: var(--color-text);*/
+/*  white-space: nowrap;*/
+/*  line-height: 1.2;*/
+/*}*/
+
+.userContainer {
+  display: flex;
+  align-items: center;
+  padding: 4px 12px 4px 4px;
+  border-radius: var(--radius);
+  background: rgba(255, 122, 0, 0.08);
+  border: 1px solid rgba(255, 122, 0, 0.2);
+  transition: background var(--transition), border-color var(--transition);
+  cursor: pointer;
 }
 
-/* Имя пользователя рядом с аватаркой */
-.userName {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text);
-  white-space: nowrap;
-  line-height: 1.2;
+.userContainer:hover {
+  background: rgba(255, 122, 0, 0.15);
+  border-color: rgba(255, 122, 0, 0.35);
 }
 
 /* src/components/Features/Navbar/Navbar.module.css */

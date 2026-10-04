@@ -1,11 +1,13 @@
 // src/components/Features/Navbar/Navbar.tsx
-import { NavLink, useNavigate, useLocation} from "react-router-dom";
+import { useState } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { auth, api } from "../../../services/api";
 import Button from "../../UI/Button/Button";
+import UserAvatar from "../../UI/UserAvatar/UserAvatar"; // <-- Импортируем компонент
 import styles from "./Navbar.module.css";
 import hrundel from "../../../assets/hrundel.svg";
 import moisey from "../../../assets/moisey.png";
-
+import UserProfileModal from "../UserProfileModal/UserProfileModal";
 
 interface NavbarProps {
   currentBoardTitle?: string;
@@ -13,11 +15,10 @@ interface NavbarProps {
 }
 
 export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarProps) {
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const loggedIn = auth.isLoggedIn();
-
-  // Определяем, находимся ли мы на странице с доской
   const isOnWorkSession = location.pathname === "/worksession";
 
   const handleLogout = async () => {
@@ -41,17 +42,11 @@ export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarP
                       <span className={styles.currentBoard}>{currentBoardTitle}</span>
                   )}
                   {isOnWorkSession ? (
-                      <button
-                          onClick={onOpenBoardsModal}
-                          className={styles.boardsButton}
-                      >
+                      <button onClick={onOpenBoardsModal} className={styles.boardsButton}>
                         Доски
                       </button>
                   ) : (
-                      <NavLink
-                          to="/worksession"
-                          className={styles.boardsButton}
-                      >
+                      <NavLink to="/worksession" className={styles.boardsButton}>
                         Доски
                       </NavLink>
                   )}
@@ -69,10 +64,14 @@ export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarP
 
           <div className={styles.actions}>
             {loggedIn ? (
-                <NavLink to="/worksession" className={styles.userContainer}>
-                  <img src={moisey} alt="User" className={styles.userAvatar} />
-                  <span className={styles.userName}>username</span>
-                </NavLink>
+                <button
+                    type="button"
+                    onClick={() => setProfileModalOpen(true)}
+                    className={styles.userContainer}
+                >
+                  {/* <-- Заменяем img и span на переиспользуемый компонент */}
+                  <UserAvatar src={moisey} name="username" size="md" showName={true} />
+                </button>
             ) : (
                 <div></div>
             )}
@@ -94,8 +93,12 @@ export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarP
                 </>
             )}
           </div>
-
         </div>
+
+        <UserProfileModal
+            open={profileModalOpen}
+            onClose={() => setProfileModalOpen(false)}
+        />
       </nav>
   );
 }

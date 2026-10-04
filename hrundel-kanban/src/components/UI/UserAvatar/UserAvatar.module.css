@@ -1,4 +1,5 @@
 /* src/components/UI/UserAvatar/UserAvatar.module.css */
+
 .container {
     display: flex;
     align-items: center;
@@ -9,6 +10,7 @@
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0; /* <-- Критично: запрещает флексу сжимать или растягивать картинку */
 }
 
 .name {
@@ -18,26 +20,30 @@
 }
 
 /* Размеры */
-.sm .avatar {
-    width: 24px;
-    height: 24px;
-}
-.sm .name {
-    font-size: 12px;
+.sm .avatar { width: 24px; height: 24px; }
+.md .avatar { width: 32px; height: 32px; }
+.lg .avatar { width: 40px; height: 40px; }
+.xl .avatar { width: 80px; height: 80px; } /* <-- Явный размер для xl */
+
+.sm .name { font-size: 12px; }
+.md .name { font-size: 13px; }
+.lg .name { font-size: 14px; }
+.xl .name { font-size: 16px; }
+
+/* Fallback стили */
+.fallback {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 600;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
-.md .avatar {
-    width: 32px;
-    height: 32px;
-}
-.md .name {
-    font-size: 13px;
-}
-
-.lg .avatar {
-    width: 40px;
-    height: 40px;
-}
-.lg .name {
-    font-size: 14px;
-}
+.sm.fallback { width: 24px; height: 24px; font-size: 11px; }
+.md.fallback { width: 32px; height: 32px; font-size: 14px; }
+.lg.fallback { width: 40px; height: 40px; font-size: 16px; }
+.xl.fallback { width: 80px; height: 80px; font-size: 28px; }
