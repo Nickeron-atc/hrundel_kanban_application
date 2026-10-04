@@ -1,8 +1,10 @@
+// src/pages/WorkSession/WorkSession.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, api, Board } from "../../services/api";
 import KanbanBoard from "../../components/Features/KanbanBoard/KanbanBoard";
 import AddBoardModal from "../../components/Features/AddBoardModal/AddBoardModal";
+import { ConfirmDialog } from "../../components/UI/ConfirmDialog/ConfirmDialog";
 import styles from "./WorkSession.module.css";
 
 export default function WorkSession() {
@@ -11,13 +13,22 @@ export default function WorkSession() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
 
+  // State для диалогов подтверждения
+  const [deleteBoardDialogOpen, setDeleteBoardDialogOpen] = useState(false);
+  const [boardIdToDelete, setBoardIdToDelete] = useState<string | null>(null);
+
+  const [deleteColumnDialogOpen, setDeleteColumnDialogOpen] = useState(false);
+  const [columnIdToDelete, setColumnIdToDelete] = useState<string | null>(null);
+
+  const [deleteCardDialogOpen, setDeleteCardDialogOpen] = useState(false);
+  const [cardIdToDelete, setCardIdToDelete] = useState<string | null>(null);
+
   useEffect(() => {
     if (!auth.isLoggedIn()) {
       navigate("/login", { replace: true });
     }
   }, [navigate]);
 
-  // Загрузка досок
   useEffect(() => {
     const loadBoards = async () => {
       const res = await api.getBoards();
@@ -29,33 +40,6 @@ export default function WorkSession() {
     loadBoards();
   }, []);
 
-  // const handleAddBoard = async (title: string) => {
-  //   const res = await api.createBoard(title);
-  //   if (res.status === "ok") {
-  //     const newRes = await api.getBoards();
-  //     if (newRes.status === "ok" && newRes.data.boards.length > 0) {
-  //       setBoards(newRes.data.boards);
-  //       const newBoard = newRes.data.boards.find(b => b.title === title);
-  //       if (newBoard) {
-  //         setSelectedBoardId(newBoard.id);
-  //       } else {
-  //         setSelectedBoardId(newRes.data.boards[newRes.data.boards.length - 1].id);
-  //       }
-  //     }
-  //     setAddBoardModalOpen(false);
-  //   }
-  // };
-
-  // const handleAddBoard = async (title: string) => {
-  //   const res = await api.createBoard(title);
-  //   if (res.status === "ok") {
-  //     setBoards(prev => [...prev, res.data.board]);
-  //     setSelectedBoardId(res.data.board.id);
-  //     setAddBoardModalOpen(false);
-  //   }
-  // };
-
-
   const handleAddBoard = async (title: string): Promise<{ ok: boolean; message?: string }> => {
     const res = await api.createBoard(title);
     if (res.status !== "ok") {
@@ -65,28 +49,25 @@ export default function WorkSession() {
     setSelectedBoardId(res.data.board.id);
     return { ok: true };
   };
-  const handleDeleteBoard = async (boardId: string) => {
-    if (!confirm("Удалить доску со всеми колонками и карточками?")) return;
 
-    const res = await api.deleteBoard(boardId);
-    if (res.status !== "ok") return;
-
-    const remaining = boards.filter(b => b.id !== boardId);
-    setBoards(remaining);
-    if (selectedBoardId === boardId) {
-      setSelectedBoardId(remaining[0]?.id ?? null);
-    }
+  // Клик по кнопке удаления доски → открывает диалог
+  const handleDeleteBoardClick = (boardId: string) => {
+    setBoardIdToDelete(boardId);
+    setDeleteBoardDialogOpen(true);
   };
 
-  // const handleAddColumn = async (boardId: string, title: string) => {
-  //   const res = await api.createColumn(boardId, title);
-  //   if (res.status === "ok") {
-  //     const newRes = await api.getBoards();
-  //     if (newRes.status === "ok") {
-  //       setBoards(newRes.data.boards);
-  //     }
-  //   }
-  // };
+  // Подтверждение удаления → выполняет удаление
+  const handleDeleteBoardConfirm = async () => {
+    if (!boardIdToDelete) return;
+    const res = await api.deleteBoard(boardIdToDelete);
+    if (res.status !== "ok") return;
+    const remaining = boards.filter(b => b.id !== boardIdToDelete);
+    setBoards(remaining);
+    if (selectedBoardId === boardIdToDelete) {
+      setSelectedBoardId(remaining[0]?.id ?? null);
+    }
+    setBoardIdToDelete(null);
+  };
 
   const handleAddColumn = async (boardId: string, title: string) => {
     const res = await api.createColumn(boardId, title);
@@ -99,29 +80,24 @@ export default function WorkSession() {
     }
   };
 
-  // const handleDeleteColumn = async (boardId: string, columnId: string) => {
-  //   if (!confirm("Вы уверены, что хотите удалить эту колонку?")) return;
-  //
-  //   const res = await api.deleteColumn(boardId, columnId);
-  //   if (res.status === "ok") {
-  //     const newRes = await api.getBoards();
-  //     if (newRes.status === "ok") {
-  //       setBoards(newRes.data.boards);
-  //     }
-  //   }
-  // };
+  // Клик по кнопке удаления колонки → открывает диалог
+  const handleDeleteColumnClick = (columnId: string) => {
+    setColumnIdToDelete(columnId);
+    setDeleteColumnDialogOpen(true);
+  };
 
-  const handleDeleteColumn = async (boardId: string, columnId: string) => {
-    if (!confirm("Вы уверены, что хотите удалить эту колонку?")) return;
-
-    const res = await api.deleteColumn(boardId, columnId);
+  // Подтверждение удаления колонки
+  const handleDeleteColumnConfirm = async () => {
+    if (!columnIdToDelete || !selectedBoardId) return;
+    const res = await api.deleteColumn(selectedBoardId, columnIdToDelete);
     if (res.status === "ok") {
       setBoards(prev => prev.map(b =>
-          b.id === boardId
-              ? { ...b, columns: b.columns.filter(c => c.id !== columnId) }
+          b.id === selectedBoardId
+              ? { ...b, columns: b.columns.filter(c => c.id !== columnIdToDelete) }
               : b,
       ));
     }
+    setColumnIdToDelete(null);
   };
 
   const handleAddCard = async (
@@ -132,7 +108,6 @@ export default function WorkSession() {
   ) => {
     const res = await api.createCard(boardId, columnId, title, description);
     if (res.status !== "ok") return;
-
     setBoards(prev => prev.map(b =>
         b.id === boardId
             ? {
@@ -154,7 +129,6 @@ export default function WorkSession() {
   ) => {
     const res = await api.moveCard(boardId, cardId, targetColumnId);
     if (res.status !== "ok") return;
-
     setBoards(prev => prev.map(b => {
       if (b.id !== boardId) return b;
       const card = b.columns
@@ -176,107 +150,123 @@ export default function WorkSession() {
     }));
   };
 
-  const handleDeleteCard = async (boardId: string, cardId: string) => {
-    if (!confirm("Удалить карточку?")) return;
+  // Клик по кнопке удаления карточки → открывает диалог
+  const handleDeleteCardClick = (cardId: string) => {
+    setCardIdToDelete(cardId);
+    setDeleteCardDialogOpen(true);
+  };
 
-    const res = await api.deleteCard(boardId, cardId);
+  // Подтверждение удаления карточки
+  const handleDeleteCardConfirm = async () => {
+    if (!cardIdToDelete || !selectedBoardId) return;
+    const res = await api.deleteCard(selectedBoardId, cardIdToDelete);
     if (res.status !== "ok") return;
-
     setBoards(prev => prev.map(b =>
-        b.id === boardId
+        b.id === selectedBoardId
             ? {
               ...b,
               columns: b.columns.map(c => ({
                 ...c,
-                cards: c.cards.filter(card => card.id !== cardId),
+                cards: c.cards.filter(card => card.id !== cardIdToDelete),
               })),
             }
             : b,
     ));
+    setCardIdToDelete(null);
   };
 
   const currentBoard = boards.find(board => board.id === selectedBoardId) || null;
 
   return (
-    <main className={styles.workSessionPage}>
-      <div className={styles.boardHeader}>
-        <h1> Мои доски</h1>
-        <button
-          onClick={() => setAddBoardModalOpen(true)}
-          className={styles.addBoardButton}
-        >
-          + Новая доска
-        </button>
-      </div>
-
-      {boards.length > 1 && (
-        <div className={styles.boardSelector}>
-          <label className={styles.boardSelectorLabel} htmlFor="board-select">Выберите доску:</label>
-          <select
-            id="board-select"
-            value={selectedBoardId || ""}
-            onChange={(e) => setSelectedBoardId(e.target.value)}
-            className={styles.boardSelect}
-          >
-            {boards.map(board => (
-              <option key={board.id} value={board.id}>
-                {board.title}
-              </option>
-            ))}
-          </select>
-
+      <main className={styles.workSessionPage}>
+        <div className={styles.boardHeader}>
+          <h1>Мои доски</h1>
           <button
-              onClick={() => selectedBoardId && handleDeleteBoard(selectedBoardId)}
-              className={styles.deleteBoardButton}
-              disabled={!selectedBoardId}
-              title="Удалить текущую доску"
+              onClick={() => setAddBoardModalOpen(true)}
+              className={styles.addBoardButton}
           >
-            <h3>Удалить доску</h3>
+            + Новая доска
           </button>
         </div>
-      )}
+        {boards.length > 1 && (
+            <div className={styles.boardSelector}>
+              <label className={styles.boardSelectorLabel} htmlFor="board-select">
+                Выберите доску:
+              </label>
+              <select
+                  id="board-select"
+                  value={selectedBoardId || ""}
+                  onChange={(e) => setSelectedBoardId(e.target.value)}
+                  className={styles.boardSelect}
+              >
+                {boards.map(board => (
+                    <option key={board.id} value={board.id}>
+                      {board.title}
+                    </option>
+                ))}
+              </select>
+              <button
+                  onClick={() => selectedBoardId && handleDeleteBoardClick(selectedBoardId)}
+                  className={styles.deleteBoardButton}
+                  disabled={!selectedBoardId}
+                  title="Удалить текущую доску"
+              >
+                <h3>Удалить доску</h3>
+              </button>
+            </div>
+        )}
+        {currentBoard ? (
+            <KanbanBoard
+                board={currentBoard}
+                onAddColumn={(title) => handleAddColumn(currentBoard.id, title)}
+                onDeleteColumn={handleDeleteColumnClick}
+                onAddCard={(columnId, title, description) =>
+                    handleAddCard(currentBoard.id, columnId, title, description)
+                }
+                onMoveCard={(cardId, targetColumnId) =>
+                    handleMoveCard(currentBoard.id, cardId, targetColumnId)
+                }
+                onDeleteCard={handleDeleteCardClick}
+            />
+        ) : (
+            <div className={styles.noBoard}>Нет доступных досок</div>
+        )}
+        <AddBoardModal
+            visible={addBoardModalOpen}
+            onClose={() => setAddBoardModalOpen(false)}
+            onAdd={handleAddBoard}
+        />
 
-      {/*{currentBoard ? (*/}
-      {/*  <KanbanBoard */}
-      {/*    board={currentBoard} */}
-      {/*    onAddColumn={handleAddColumn}*/}
-      {/*    onDeleteColumn={handleDeleteColumn}*/}
-      {/*  />*/}
-      {/*) : (*/}
-      {/*  <div className={styles.noBoard}>Нет доступных досок</div>*/}
-      {/*)}*/}
+        {/* Диалоги подтверждения */}
+        <ConfirmDialog
+            open={deleteBoardDialogOpen}
+            onOpenChange={setDeleteBoardDialogOpen}
+            title="Удалить доску?"
+            description="Все колонки и карточки будут удалены безвозвратно."
+            confirmLabel="Удалить"
+            variant="danger"
+            onConfirm={handleDeleteBoardConfirm}
+        />
 
-      {currentBoard ? (
-          // <KanbanBoard
-          //     board={currentBoard}
-          //     onAddColumn={(title) => handleAddColumn(currentBoard.id, title)}
-          //     onDeleteColumn={(columnId) => handleDeleteColumn(currentBoard.id, columnId)}
-          //     onAddCard={(columnId, title, description) =>
-          //         handleAddCard(currentBoard.id, columnId, title, description)
-          //     }
-          //     onDeleteCard={(cardId) => handleDeleteCard(currentBoard.id, cardId)}
-          // />
-          <KanbanBoard
-              board={currentBoard}
-              onAddColumn={(title) => handleAddColumn(currentBoard.id, title)}
-              onDeleteColumn={(columnId) => handleDeleteColumn(currentBoard.id, columnId)}
-              onAddCard={(columnId, title, description) =>
-                  handleAddCard(currentBoard.id, columnId, title, description)
-              }
-              onMoveCard={(cardId, targetColumnId) =>
-                  handleMoveCard(currentBoard.id, cardId, targetColumnId)
-              }
-              onDeleteCard={(cardId) => handleDeleteCard(currentBoard.id, cardId)}
-          />
-      ) : (
-          <div className={styles.noBoard}>Нет доступных досок</div>
-      )}
+        <ConfirmDialog
+            open={deleteColumnDialogOpen}
+            onOpenChange={setDeleteColumnDialogOpen}
+            title="Удалить колонку?"
+            description="Все карточки в этой колонке будут удалены."
+            confirmLabel="Удалить"
+            variant="danger"
+            onConfirm={handleDeleteColumnConfirm}
+        />
 
-      <AddBoardModal
-        visible={addBoardModalOpen}
-        onClose={() => setAddBoardModalOpen(false)}
-        onAdd={handleAddBoard}
-      />
-    </main>
+        <ConfirmDialog
+            open={deleteCardDialogOpen}
+            onOpenChange={setDeleteCardDialogOpen}
+            title="Удалить карточку?"
+            description="Это действие нельзя отменить."
+            confirmLabel="Удалить"
+            variant="danger"
+            onConfirm={handleDeleteCardConfirm}
+        />
+      </main>
   );
 }
