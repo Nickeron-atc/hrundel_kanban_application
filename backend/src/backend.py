@@ -151,7 +151,7 @@ def login():
     if not name or not password:
         return err("Заполните все поля")
 
-    user = query_one("SELECT id, password_hash FROM users WHERE name = %s", (name,))
+    user = query_one("SELECT id, password_hash FROM users WHERE full_name = %s", (name,))
     if not user or not check_password_hash(user["password_hash"], password):
         return err("Неверный логин или пароль", 401)
 
@@ -169,11 +169,11 @@ def register():
     if len(password) < 4:
         return err("Пароль должен быть не менее 4 символов")
 
-    if query_one("SELECT 1 FROM users WHERE name = %s", (name,)):
+    if query_one("SELECT 1 FROM users WHERE full_name = %s", (name,)):
         return err("Логин уже занят", 409)
 
     row = execute(
-        "INSERT INTO users (name, password_hash) VALUES (%s, %s) RETURNING id",
+        "INSERT INTO users (login, password_hash) VALUES (%s, %s) RETURNING id",
         (name, generate_password_hash(password)),
         returning=True,
     )
@@ -238,6 +238,47 @@ MOCK_BOARDS = [
 #     }), 200
 
 
+# @app.route("/api/boards", methods=["GET"])
+# def get_boards():
+#     user_id = get_current_user_id()
+#     if not user_id:
+#         return err("Не авторизован", 401)
+#
+#     boards = query_all(
+#         """
+#         SELECT b.id, b.title
+#         FROM boards b
+#                  JOIN board_members bm ON bm.board_id = b.id
+#         WHERE bm.user_id = %s
+#         ORDER BY b.created_at
+#         """,
+#         (user_id,),
+#     )
+#     for b in boards:
+#         b["id"] = str(b["id"])
+#         cols = query_all(
+#             "SELECT id, title, position FROM board_columns WHERE board_id = %s ORDER BY position, id",
+#             (b["id"],),
+#         )
+#         for c in cols:
+#             c["id"] = str(c["id"])
+#             cards = query_all(
+#                 """
+#                 SELECT id, title, description, position
+#                 FROM cards WHERE column_id = %s
+#                 ORDER BY position, id
+#                 """,
+#                 (c["id"],),
+#             )
+#             for card in cards:
+#                 card["id"] = str(card["id"])
+#             c["cards"] = cards
+#         b["columns"] = cols
+#
+#     return jsonify({"status": "ok", "data": {"boards": boards}}), 200
+
+# backend/src/backend.py - обновляем функцию get_boards
+
 @app.route("/api/boards", methods=["GET"])
 def get_boards():
     user_id = get_current_user_id()
@@ -254,25 +295,46 @@ def get_boards():
         """,
         (user_id,),
     )
+
     for b in boards:
         b["id"] = str(b["id"])
         cols = query_all(
             "SELECT id, title, position FROM board_columns WHERE board_id = %s ORDER BY position, id",
             (b["id"],),
         )
+
         for c in cols:
             c["id"] = str(c["id"])
             cards = query_all(
                 """
-                SELECT id, title, description, position
+                SELECT id, title, description, position, color
                 FROM cards WHERE column_id = %s
                 ORDER BY position, id
                 """,
                 (c["id"],),
             )
+
             for card in cards:
                 card["id"] = str(card["id"])
+
+                # НОВОЕ: Загружаем теги для карточки
+                tags = query_all(
+                    """
+                    SELECT t.id, t.name, t.color
+                    FROM tags t
+                             JOIN card_tags ct ON ct.tag_id = t.id
+                    WHERE ct.card_id = %s
+                    """,
+                    (card["id"],),
+                )
+
+                for tag in tags:
+                    tag["id"] = str(tag["id"])
+
+                card["tags"] = tags
+
             c["cards"] = cards
+
         b["columns"] = cols
 
     return jsonify({"status": "ok", "data": {"boards": boards}}), 200
@@ -544,6 +606,116 @@ def move_card(board_id: int):
     if not row:
         return err("Карточка не найдена", 404)
     return ok({"cardId": row["id"], "targetColumnId": row["column_id"]})
+
+# backend/src/backend.py - добавляем новые эндпоинты
+
+# Получить все теги доски
+@app.route("/api/boards/<int:board_id>/tags", methods=["GET"])
+def get_board_tags(board_id: int):
+    user_id = get_current_user_id()
+    if not user_id or not user_owns_board(user_id, board_id):
+        return err("Доска не найдена или нет прав", 404)
+
+    tags = query_all(
+        "SELECT id, name, color FROM tags WHERE board_id = %s ORDER BY name",
+        (board_id,),
+    )
+
+    for tag in tags:
+        tag["id"] = str(tag["id"])
+
+    return jsonify({"status": "ok", "data": {"tags": tags}}), 200
+
+
+# Создать новый тег
+@app.route("/api/boards/<int:board_id>/tags", methods=["POST"])
+def create_tag(board_id: int):
+    user_id = get_current_user_id()
+    if not user_id or not user_owns_board(user_id, board_id):
+        return err("Доска не найдена или нет прав", 404)
+
+    body = request.get_json(silent=True) or {}
+    name = (body.get("name") or "").strip()
+    color = (body.get("color") or "#FF7A00").strip()
+
+    if not name:
+        return err("Укажите название тега")
+
+    try:
+        row = execute(
+            """
+            INSERT INTO tags (name, color, board_id)
+            VALUES (%s, %s, %s)
+            RETURNING id, name, color
+            """,
+            (name, color, board_id),
+            returning=True,
+        )
+        return jsonify({"status": "ok", "data": {"tag": {
+            "id": str(row["id"]),
+            "name": row["name"],
+            "color": row["color"],
+        }}}), 201
+    except psycopg2.errors.UniqueViolation:
+        return err("Тег с таким названием уже существует", 409)
+
+
+# Обновить карточку (цвет + теги)
+@app.route("/api/boards/<int:board_id>/cards/<int:card_id>", methods=["PATCH"])
+def update_card(board_id: int, card_id: int):
+    user_id = get_current_user_id()
+    if not user_id or not user_owns_board(user_id, board_id):
+        return err("Доска не найдена или нет прав", 404)
+
+    body = request.get_json(silent=True) or {}
+    title = body.get("title")
+    description = body.get("description")
+    color = body.get("color")
+    tag_ids = body.get("tagIds")  # массив ID тегов
+
+    # Обновляем основные поля
+    updates = []
+    params = []
+
+    if title is not None:
+        updates.append("title = %s")
+        params.append(title)
+
+    if description is not None:
+        updates.append("description = %s")
+        params.append(description)
+
+    if color is not None:
+        updates.append("color = %s")
+        params.append(color)
+
+    if updates:
+        params.extend([card_id, board_id])
+        execute(
+            f"""
+            UPDATE cards
+            SET {', '.join(updates)}
+            WHERE id = %s AND board_id = %s
+            """,
+            tuple(params),
+        )
+
+    # Обновляем теги, если переданы
+    if tag_ids is not None:
+        # Удаляем старые связи
+        execute(
+            "DELETE FROM card_tags WHERE card_id = %s",
+            (card_id,),
+        )
+
+        # Добавляем новые связи
+        for tag_id in tag_ids:
+            execute(
+                "INSERT INTO card_tags (card_id, tag_id) VALUES (%s, %s)",
+                (card_id, int(tag_id)),
+            )
+
+    return ok({"cardId": card_id})
 
 # ---------------------------------------------------------------------------
 # Entry point

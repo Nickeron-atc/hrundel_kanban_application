@@ -17,6 +17,8 @@ export interface ApiResponse<T = unknown> {
 //   columnId?: string;
 // }
 
+// src/services/api.ts - добавляем новые методы
+
 export interface Tag {
   id: string;
   name: string;
@@ -28,13 +30,12 @@ export interface Card {
   title: string;
   description: string;
   columnId?: string;
-  color?: string; // Добавляем опциональное поле цвета
-  tags?: Tag[];   // Добавляем опциональный массив тегов
-  creator?: {     // Добавляем опциональную информацию о создателе
-    name: string;
-    avatarUrl: string;
-  };
+  color?: string;
+  tags?: Tag[];
 }
+
+// В объект api добавляем новые методы:
+
 
 export interface Column {
   id: string;
