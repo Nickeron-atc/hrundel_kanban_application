@@ -17,10 +17,11 @@
 }
 
 .header {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding-bottom: 10px;
+  margin-bottom: 16px;
   border-bottom: 2px solid rgba(255, 122, 0, 0.18);
 }
 
@@ -76,28 +77,32 @@
   font-family: var(--font);
 }
 
-.deleteButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 9px;
-  border-radius: var(--radius);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  border: 1.5px dashed var(--color-border);
-  background: rgba(255, 100, 0, 0.1);
-  transition: all var(--transition);
-  width: 100%;
-  font-family: var(--font);
-  /*margin-left: auto;*/
-  right: 8px;
-}
-
 .addBtn:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
   background: var(--color-primary-light);
+}
+
+.deleteButton {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.column:hover .deleteButton {
+  opacity: 1;
+}
+
+.deleteButton:hover {
+  color: #e53935;
+  background: rgba(229, 57, 53, 0.1);
 }
