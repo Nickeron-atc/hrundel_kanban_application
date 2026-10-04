@@ -1,0 +1,127 @@
+/* src/components/UI/ConfirmDialog/ConfirmDialog.module.css */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 62, 80, 0.5);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 24px;
+    animation: overlayIn 0.15s ease;
+}
+
+@keyframes overlayIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.modal {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(44, 62, 80, 0.3);
+    width: 100%;
+    max-width: 440px;
+    padding: 24px;
+    animation: modalIn 0.18s ease;
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.iconDanger {
+    background: rgba(231, 76, 60, 0.1);
+    color: var(--color-danger);
+}
+
+.iconDefault {
+    background: rgba(255, 122, 0, 0.1);
+    color: var(--color-primary);
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.description {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    margin: 0 0 20px 0;
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.cancelBtn,
+.confirmBtn {
+    padding: 9px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    border: none;
+    font-family: var(--font);
+}
+
+.cancelBtn {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+}
+
+.cancelBtn:hover:not(:disabled) {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+.confirmDefault {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.confirmDefault:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+}
+
+.confirmDanger {
+    background: var(--color-danger);
+    color: #fff;
+}
+
+.confirmDanger:hover:not(:disabled) {
+    background: #c0392b;
+}
+
+.cancelBtn:disabled,
+.confirmBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

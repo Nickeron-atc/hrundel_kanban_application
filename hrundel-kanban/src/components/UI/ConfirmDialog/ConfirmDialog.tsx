@@ -1,17 +1,7 @@
 // src/components/UI/ConfirmDialog/ConfirmDialog.tsx
 import type { ReactNode } from "react";
-import { useState } from "react";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "../../ui/alert-dialog"; // Было: @/components/ui/alert-dialog
-import { cn } from "../../../lib/utils"; // Было: @/lib/utils
+import { useState, useEffect } from "react";
+import styles from "./ConfirmDialog.module.css";
 
 interface ConfirmDialogProps {
     open: boolean;
@@ -38,6 +28,29 @@ export function ConfirmDialog({
                               }: ConfirmDialogProps) {
     const [loading, setLoading] = useState(false);
 
+    // Блокируем закрытие по Escape
+    useEffect(() => {
+        if (!open) return;
+        const handler = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.preventDefault(); // Блокируем закрытие
+            }
+        };
+        document.addEventListener("keydown", handler, true); // true — перехватываем на фазе capture
+        return () => document.removeEventListener("keydown", handler, true);
+    }, [open]);
+
+    // Блокируем скролл body
+    useEffect(() => {
+        if (!open) return;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [open]);
+
+    if (!open) return null;
+
     const handleConfirm = async () => {
         try {
             setLoading(true);
@@ -51,44 +64,40 @@ export function ConfirmDialog({
     };
 
     return (
-        <AlertDialog open={open} onOpenChange={onOpenChange}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle className="flex items-center gap-3">
-                        {icon && (
-                            <span
-                                className={cn(
-                                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-                                    variant === "danger"
-                                        ? "bg-destructive/10 text-destructive"
-                                        : "bg-primary/10 text-primary"
-                                )}
-                            >
-                {icon}
-              </span>
-                        )}
-                        {title}
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>{description}</AlertDialogDescription>
-                </AlertDialogHeader>
-
-                <AlertDialogFooter>
-                    <AlertDialogCancel disabled={loading}>{cancelLabel}</AlertDialogCancel>
-                    <AlertDialogAction
-                        onClick={(e) => {
-                            e.preventDefault();
-                            handleConfirm();
-                        }}
+        <div className={styles.overlay}>
+            <div className={styles.modal} role="alertdialog" aria-modal="true">
+                <div className={styles.header}>
+                    {icon && (
+                        <span
+                            className={`${styles.icon} ${
+                                variant === "danger" ? styles.iconDanger : styles.iconDefault
+                            }`}
+                        >
+              {icon}
+            </span>
+                    )}
+                    <h2 className={styles.title}>{title}</h2>
+                </div>
+                <p className={styles.description}>{description}</p>
+                <div className={styles.footer}>
+                    <button
+                        className={styles.cancelBtn}
+                        onClick={() => onOpenChange(false)}
                         disabled={loading}
-                        className={cn(
-                            variant === "danger" &&
-                            "bg-destructive text-destructive-foreground hover:bg-destructive/90 border-destructive-border"
-                        )}
+                    >
+                        {cancelLabel}
+                    </button>
+                    <button
+                        className={`${styles.confirmBtn} ${
+                            variant === "danger" ? styles.confirmDanger : styles.confirmDefault
+                        }`}
+                        onClick={handleConfirm}
+                        disabled={loading}
                     >
                         {loading ? "Выполняется..." : confirmLabel}
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 }

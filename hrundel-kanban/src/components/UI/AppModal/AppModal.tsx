@@ -1,12 +1,7 @@
 // src/components/UI/AppModal/AppModal.tsx
 import type { ReactNode } from "react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "../../ui/dialog"; // Было: @/components/ui/dialog
+import { useEffect } from "react";
+import styles from "./AppModal.module.css";
 
 interface AppModalProps {
     open: boolean;
@@ -19,13 +14,6 @@ interface AppModalProps {
     closeOnOverlayClick?: boolean;
 }
 
-const sizeClasses: Record<NonNullable<AppModalProps["size"]>, string> = {
-    sm: "max-w-sm",
-    md: "max-w-lg",
-    lg: "max-w-2xl",
-    xl: "max-w-4xl",
-};
-
 export function AppModal({
                              open,
                              onOpenChange,
@@ -36,29 +24,54 @@ export function AppModal({
                              size = "md",
                              closeOnOverlayClick = true,
                          }: AppModalProps) {
+    // Закрытие по Escape
+    useEffect(() => {
+        if (!open) return;
+        const handler = (e: KeyboardEvent) => {
+            if (e.key === "Escape" && closeOnOverlayClick) {
+                onOpenChange(false);
+            }
+        };
+        document.addEventListener("keydown", handler);
+        return () => document.removeEventListener("keydown", handler);
+    }, [open, onOpenChange, closeOnOverlayClick]);
+
+    // Блокировка скролла body
+    useEffect(() => {
+        if (!open) return;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [open]);
+
+    if (!open) return null;
+
+    const sizeClass = styles[size] || styles.md;
+
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent
-                className={sizeClasses[size]}
-                onPointerDownOutside={(e) => {
-                    if (!closeOnOverlayClick) e.preventDefault();
-                }}
-            >
+        <div
+            className={styles.overlay}
+            onMouseDown={(e) => {
+                if (e.target === e.currentTarget && closeOnOverlayClick) {
+                    onOpenChange(false);
+                }
+            }}
+        >
+            <div className={`${styles.modal} ${sizeClass}`} role="dialog" aria-modal="true">
                 {title && (
-                    <DialogHeader>
-                        <DialogTitle>{title}</DialogTitle>
-                        {description && (
-                            <DialogDescription>{description}</DialogDescription>
+                    <div className={styles.header}>
+                        <h2 className={styles.title}>{title}</h2>
+                        {closeOnOverlayClick && (
+                            <button className={styles.close} onClick={() => onOpenChange(false)} aria-label="Закрыть">
+                                ×
+                            </button>
                         )}
-                    </DialogHeader>
-                )}
-                <div className="py-2">{children}</div>
-                {footer && (
-                    <div className="mt-4 flex justify-end gap-2 border-t pt-4">
-                        {footer}
                     </div>
                 )}
-            </DialogContent>
-        </Dialog>
+                <div className={styles.body}>{children}</div>
+                {footer && <div className={styles.footer}>{footer}</div>}
+            </div>
+        </div>
     );
 }
