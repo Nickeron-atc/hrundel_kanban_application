@@ -1,15 +1,167 @@
 /* src/components/Features/Navbar/Navbar.module.css */
-/* Добавь в конец файла */
 
+/* ============================================
+   БАЗОВЫЙ КОНТЕЙНЕР ШАПКИ
+   ============================================ */
+.navbar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 3px var(--color-shadow);
+  position: relative;
+  z-index: 10;
+}
+
+/* Внутренняя обёртка — ограничивает ширину и распределяет элементы */
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  gap: 16px;
+}
+
+/* ============================================
+   ЛОГОТИП СЛЕВА
+   ============================================ */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+/* Иконка логотипа — фиксированный размер, чтобы не растягивалась */
+.logoIcon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   ЦЕНТРАЛЬНАЯ НАВИГАЦИЯ (ссылки + кнопки)
+   ============================================ */
+.links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  justify-content: center;
+}
+
+.link {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  transition: background var(--transition), color var(--transition);
+}
+
+.link:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* Название текущей доски */
 .currentBoard {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--color-text);
   padding: 6px 14px;
   border-radius: var(--radius);
   background: rgba(255, 122, 0, 0.1);
   border: 1px solid rgba(255, 122, 0, 0.3);
+  white-space: nowrap;
 }
+
+/* Кнопка "Доски" */
+.boardsButton {
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  font-family: var(--font);
+  white-space: nowrap;
+}
+
+.boardsButton:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* ============================================
+   ПРАВАЯ ЧАСТЬ — ДЕЙСТВИЯ И ПОЛЬЗОВАТЕЛЬ
+   ============================================ */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Контейнер пользователя (аватарка + имя) */
+.userContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border-radius: var(--radius);
+  background: rgba(255, 122, 0, 0.08);
+  border: 1px solid rgba(255, 122, 0, 0.2);
+  transition: background var(--transition), border-color var(--transition);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.userContainer:hover {
+  background: rgba(255, 122, 0, 0.15);
+  border-color: rgba(255, 122, 0, 0.35);
+}
+
+/* Аватарка пользователя — КРУГЛАЯ, ФИКСИРОВАННОГО РАЗМЕРА */
+.userAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 122, 0, 0.3);
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Имя пользователя рядом с аватаркой */
+.userName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+/* src/components/Features/Navbar/Navbar.module.css */
+/* Добавь в конец файла */
 
 .boardsButton {
   padding: 6px 14px;
@@ -22,6 +174,8 @@
   cursor: pointer;
   transition: background var(--transition), color var(--transition);
   font-family: var(--font);
+  text-decoration: none;
+  display: inline-block;
 }
 
 .boardsButton:hover {

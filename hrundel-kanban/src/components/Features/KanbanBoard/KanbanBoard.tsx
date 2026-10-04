@@ -121,9 +121,7 @@ export default function KanbanBoard({
 
     return (
         <div className={styles.board}>
-            <div className={styles.header}>
-                <h1 className={styles.title}>{board.title}</h1>
-            </div>
+
             <div className={styles.columns}>
                 {board.columns.map((column) => (
                     <KanbanColumn

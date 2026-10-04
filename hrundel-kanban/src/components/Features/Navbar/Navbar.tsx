@@ -1,10 +1,11 @@
 // src/components/Features/Navbar/Navbar.tsx
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation} from "react-router-dom";
 import { auth, api } from "../../../services/api";
 import Button from "../../UI/Button/Button";
 import styles from "./Navbar.module.css";
 import hrundel from "../../../assets/hrundel.svg";
 import moisey from "../../../assets/moisey.png";
+
 
 interface NavbarProps {
   currentBoardTitle?: string;
@@ -13,7 +14,11 @@ interface NavbarProps {
 
 export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const loggedIn = auth.isLoggedIn();
+
+  // Определяем, находимся ли мы на странице с доской
+  const isOnWorkSession = location.pathname === "/worksession";
 
   const handleLogout = async () => {
     await api.logout();
@@ -28,18 +33,28 @@ export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarP
             <img src={hrundel} alt="Hrundel" className={styles.logoIcon} />
             Hrundel
           </NavLink>
+
           <div className={styles.links}>
             {loggedIn && (
                 <>
                   {currentBoardTitle && (
                       <span className={styles.currentBoard}>{currentBoardTitle}</span>
                   )}
-                  <button
-                      onClick={onOpenBoardsModal}
-                      className={styles.boardsButton}
-                  >
-                    Доски
-                  </button>
+                  {isOnWorkSession ? (
+                      <button
+                          onClick={onOpenBoardsModal}
+                          className={styles.boardsButton}
+                      >
+                        Доски
+                      </button>
+                  ) : (
+                      <NavLink
+                          to="/worksession"
+                          className={styles.boardsButton}
+                      >
+                        Доски
+                      </NavLink>
+                  )}
                 </>
             )}
             <NavLink
@@ -51,19 +66,17 @@ export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarP
               О проекте
             </NavLink>
           </div>
+
           <div className={styles.actions}>
             {loggedIn ? (
-                <NavLink to={loggedIn ? "/worksession" : "/login"} className={styles.logo}>
-                  <div className="row-container">
-                    <div className="row-item">
-                      <img src={moisey} alt="Moisey" className={styles.logoIcon} />
-                    </div>
-                    <div className="row-item">username</div>
-                  </div>
+                <NavLink to="/worksession" className={styles.userContainer}>
+                  <img src={moisey} alt="User" className={styles.userAvatar} />
+                  <span className={styles.userName}>username</span>
                 </NavLink>
             ) : (
                 <div></div>
             )}
+
             {loggedIn ? (
                 <div>
                   <Button variant="ghost" size="sm" onClick={handleLogout}>
@@ -81,6 +94,7 @@ export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarP
                 </>
             )}
           </div>
+
         </div>
       </nav>
   );

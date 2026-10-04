@@ -65,3 +65,21 @@ ul,
 ol {
   list-style: none;
 }
+
+/* src/index.css */
+/* Добавь в конец файла */
+
+body {
+  background-image: url('./assets/backgrounds/osnova.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

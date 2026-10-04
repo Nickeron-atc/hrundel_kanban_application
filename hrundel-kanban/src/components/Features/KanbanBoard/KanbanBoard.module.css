@@ -1,10 +1,18 @@
+/*.board {*/
+/*  flex: 1;*/
+/*  padding: 28px 24px 40px;*/
+/*  max-width: 1280px;*/
+/*  margin: 0 auto;*/
+/*  width: 100%;*/
+/*}*/
+
 .board {
   flex: 1;
-  padding: 28px 24px 40px;
-  max-width: 1280px;
-  margin: 0 auto;
+  padding: 28px 40px 40px; /* Увеличиваем горизонтальные отступы */
   width: 100%;
+  /* Убираем max-width и margin: 0 auto */
 }
+
 
 .header {
   display: flex;
@@ -30,12 +38,48 @@
   border: 1px solid rgba(255, 122, 0, 0.8);
 }
 
+/*.columns {*/
+/*  display: flex;*/
+/*  gap: 18px;*/
+/*  overflow-x: auto;*/
+/*  padding-bottom: 16px;*/
+/*  align-items: flex-start;*/
+/*}*/
+
+/* src/components/Features/KanbanBoard/KanbanBoard.module.css */
+
+/* src/components/Features/KanbanBoard/KanbanBoard.module.css */
+/* Добавь в конец файла */
+
+/* Стилизация скроллбара */
+.columns::-webkit-scrollbar {
+  height: 10px;
+}
+
+.columns::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+
+.columns::-webkit-scrollbar-thumb {
+  background: rgba(255, 122, 0, 0.5);
+  border-radius: 5px;
+  transition: background 0.2s;
+}
+
+.columns::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 122, 0, 0.7);
+}
+
 .columns {
   display: flex;
   gap: 18px;
   overflow-x: auto;
   padding-bottom: 16px;
+  padding-right: 40px; /* Добавляем правый отступ */
   align-items: flex-start;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 122, 0, 0.5) rgba(255, 255, 255, 0.1);
 }
 
 .loading {
