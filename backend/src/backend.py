@@ -90,12 +90,24 @@ def get_current_user_id():
     row = query_one("SELECT id FROM users LIMIT 1")
     return row["id"] if row else None
 
+# def user_owns_board(user_id, board_id):
+#     row = query_one(
+#         """
+#         SELECT 1 FROM board_members
+#         WHERE board_id = %s AND user_id = %s
+#           AND user_role IN ('owner','admin','member')
+#         """,
+#         (board_id, user_id),
+#     )
+#     return row is not None
+
 def user_owns_board(user_id, board_id):
+    # ИСПРАВЛЕНИЕ: проверяем владельца напрямую в таблице boards,
+    # так как таблицы board_members больше не существует в схеме БД.
     row = query_one(
         """
-        SELECT 1 FROM board_members
-        WHERE board_id = %s AND user_id = %s
-          AND user_role IN ('owner','admin','member')
+        SELECT 1 FROM boards
+        WHERE id = %s AND user_id = %s
         """,
         (board_id, user_id),
     )
@@ -717,40 +729,82 @@ def delete_column(board_id: int, column_id: int):
         return err("Колонка не найдена", 404)
     return ok({"deleted": column_id})
 
+# @app.route("/api/boards/<int:board_id>/columns/<int:column_id>/cards", methods=["POST"])
+# def create_card(board_id: int, column_id: int):
+#     user_id = get_current_user_id()
+#     if not user_id or not user_owns_board(user_id, board_id):
+#         return err("Доска не найдена или нет прав", 404)
+#
+#     body = request.get_json(silent=True) or {}
+#     title = (body.get("title") or "").strip()
+#     description = (body.get("description") or "").strip() or None
+#     if not title:
+#         return err("Укажите заголовок карточки")
+#
+#     try:
+#         row = execute(
+#             """
+#             INSERT INTO cards (board_id, column_id, title, description, position)
+#             VALUES (
+#                        %s, %s, %s, %s,
+#                        COALESCE((SELECT MAX(position) + 1 FROM cards WHERE column_id = %s), 0)
+#                    )
+#                 RETURNING id, title, description, position, column_id
+#             """,
+#             (board_id, column_id, title, description, column_id),
+#             returning=True,
+#         )
+#     except psycopg2.errors.ForeignKeyViolation:
+#         return err("Колонка не принадлежит этой доске", 400)
+#
+#     return jsonify({"status": "ok", "data": {"card": {
+#         "id": str(row["id"]),
+#         "title": row["title"],
+#         "description": row["description"] or "",
+#         "columnId": str(row["column_id"]),
+#     }}}), 201
+
+# backend/src/backend.py
+
 @app.route("/api/boards/<int:board_id>/columns/<int:column_id>/cards", methods=["POST"])
 def create_card(board_id: int, column_id: int):
     user_id = get_current_user_id()
     if not user_id or not user_owns_board(user_id, board_id):
         return err("Доска не найдена или нет прав", 404)
 
-    body = request.get_json(silent=True) or {}
-    title = (body.get("title") or "").strip()
-    description = (body.get("description") or "").strip() or None
+    # Проверка, что колонка принадлежит этой доске
+    col = query_one(
+        "SELECT id FROM columns WHERE id = %s AND board_id = %s",
+        (column_id, board_id)
+    )
+    if not col:
+        return err("Целевая колонка не принадлежит этой доске", 400)
+
+    data = request.get_json() or {}
+    title = data.get("title", "").strip()
+    description = data.get("description", "").strip()
+
     if not title:
-        return err("Укажите заголовок карточки")
+        return err("Название карточки не может быть пустым", 400)
 
-    try:
-        row = execute(
-            """
-            INSERT INTO cards (board_id, column_id, title, description, position)
-            VALUES (
-                       %s, %s, %s, %s,
-                       COALESCE((SELECT MAX(position) + 1 FROM cards WHERE column_id = %s), 0)
-                   )
-                RETURNING id, title, description, position, column_id
-            """,
-            (board_id, column_id, title, description, column_id),
-            returning=True,
-        )
-    except psycopg2.errors.ForeignKeyViolation:
-        return err("Колонка не принадлежит этой доске", 400)
+    # ИСПРАВЛЕНИЕ: убрали board_id из списка колонок и значений,
+    # так как карточка связана с доской только через колонку.
+    row = execute(
+        """
+        INSERT INTO cards (column_id, title, description)
+        VALUES (%s, %s, %s)
+            RETURNING id, column_id, title, description;
+        """,
+        (column_id, title, description),
+        returning=True,
+    )
 
-    return jsonify({"status": "ok", "data": {"card": {
-        "id": str(row["id"]),
+    return ok({
+        "id": row["id"],
+        "column_id": row["column_id"],
         "title": row["title"],
-        "description": row["description"] or "",
-        "columnId": str(row["column_id"]),
-    }}}), 201
+        "description": row["description"]
+    }, status=201)
 
 @app.route("/api/boards/<int:board_id>/cards/<int:card_id>", methods=["DELETE"])
 def delete_card(board_id: int, card_id: int):

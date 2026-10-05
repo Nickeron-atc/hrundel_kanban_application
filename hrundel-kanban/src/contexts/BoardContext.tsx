@@ -1,5 +1,5 @@
 // src/contexts/BoardContext.tsx
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
 import { api, Board } from "../services/api";
 
 interface BoardContextType {
@@ -19,38 +19,35 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     const [currentBoardId, setCurrentBoardId] = useState<string | null>(null);
     const [isBoardsModalOpen, setIsBoardsModalOpen] = useState(false);
 
-    // const reloadBoards = async () => {
-    //     const res = await api.getBoards();
-    //     if (res.status === "ok") {
-    //         setBoards(res.data.boards);
-    //         if (res.data.boards.length > 0 && !currentBoardId) {
-    //             setCurrentBoardId(res.data.boards[0].id);
-    //         }
-    //     }
-    // };
+    // Ref хранит актуальный currentBoardId, чтобы не добавлять его в зависимости useCallback
+    const currentBoardIdRef = useRef(currentBoardId);
+    currentBoardIdRef.current = currentBoardId;
 
-
-    const reloadBoards = async () => {
+    // Оборачиваем в useCallback с пустым массивом зависимостей.
+    // Теперь ссылка на функцию стабильна и не меняется при перерендерах.
+    const reloadBoards = useCallback(async () => {
         const res = await api.getBoards();
         if (res.status === "ok") {
             setBoards(res.data.boards);
 
-            // Проверяем, принадлежит ли текущая выбранная доска новому списку
-            const hasCurrent = res.data.boards.some((b) => b.id === currentBoardId);
+            const cId = currentBoardIdRef.current;
+            const hasCurrent = res.data.boards.some((b) => b.id === cId);
 
             if (!hasCurrent && res.data.boards.length > 0) {
-                // Если нет (или это первый вход), выбираем первую доску нового пользователя
                 setCurrentBoardId(res.data.boards[0].id);
             } else if (res.data.boards.length === 0) {
                 setCurrentBoardId(null);
             }
         }
-    };
+    }, []);
+
+    // Добавляем reloadBoards в зависимости, теперь ESLint не будет ругаться,
+    // а цикл прервется, так как ссылка на функцию больше не меняется.
     useEffect(() => {
         if (localStorage.getItem("auth_token")) {
             reloadBoards();
         }
-    }, []);
+    }, [reloadBoards]);
 
     return (
         <BoardContext.Provider
