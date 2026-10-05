@@ -244,15 +244,42 @@ def create_app():
         db.session.commit()
         return jsonify({"status": "ok"})
 
+    # @app.route("/api/cards/move", methods=["POST"])
+    # @jwt_required
+    # def move_card():
+    #     body = request.get_json(silent=True) or {}
+    #     card_id = body.get("card_id")
+    #     target_column_id = body.get("target_column_id")
+    #
+    #     if not card_id or not target_column_id:
+    #         return err("Необходимы card_id и target_column_id")
+    #
+    #     card = Card.query.get(card_id)
+    #     target_col = Column.query.get(target_column_id)
+    #
+    #     if not card or not target_col:
+    #         return err("Карточка или колонка не найдена", 404)
+    #
+    #     if not user_owns_board(g.current_user.id, target_col.board_id):
+    #         return err("Нет прав", 403)
+    #
+    #     card.column_id = target_column_id
+    #     db.session.commit()
+    #
+    #     return jsonify({"status": "ok"})
+
+
+
     @app.route("/api/cards/move", methods=["POST"])
     @jwt_required
     def move_card():
         body = request.get_json(silent=True) or {}
         card_id = body.get("card_id")
         target_column_id = body.get("target_column_id")
+        board_id = body.get("board_id")
 
-        if not card_id or not target_column_id:
-            return err("Необходимы card_id и target_column_id")
+        if not card_id or not target_column_id or not board_id:
+            return err("Необходимы card_id, target_column_id и board_id")
 
         card = Card.query.get(card_id)
         target_col = Column.query.get(target_column_id)
@@ -265,8 +292,7 @@ def create_app():
 
         card.column_id = target_column_id
         db.session.commit()
-
-        return jsonify({"status": "ok"})
+        return jsonify({"status": "ok", "data": {"cardId": card_id, "targetColumnId": target_column_id}})
 
     @app.route("/api/boards/<int:board_id>/tags", methods=["GET"])
     @jwt_required
