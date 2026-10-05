@@ -126,11 +126,18 @@ export const api = {
   getBoards(): Promise<ApiResponse<{ boards: Board[] }>> {
     return request("/boards");
   },
-  /** POST /api/boards — { name } → { board: Board } */
-  createBoard(name: string): Promise<ApiResponse<{ board: Board }>> {
+  // /** POST /api/boards — { name } → { board: Board } */
+  // createBoard(name: string): Promise<ApiResponse<{ board: Board }>> {
+  //   return request("/boards", {
+  //     method: "POST",
+  //     body: JSON.stringify({ name }),
+  //   });
+  // },
+
+  createBoard(title: string): Promise<ApiResponse<{ board: Board }>> {
     return request("/boards", {
       method: "POST",
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ title }), // Изменено с { name } на { title }
     });
   },
 

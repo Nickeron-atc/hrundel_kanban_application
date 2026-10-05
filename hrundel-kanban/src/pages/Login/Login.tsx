@@ -25,7 +25,8 @@ export default function Login() {
     setLoading(false);
 
     if (res.status === "ok") {
-      auth.setToken(res.data.auth_token);
+      // Изменено с res.data.auth_token на res.data.token
+      auth.setToken(res.data.token);
       navigate("/worksession");
     } else {
       setError(res.message ?? "Ошибка авторизации");
