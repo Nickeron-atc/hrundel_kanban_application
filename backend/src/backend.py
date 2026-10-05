@@ -17,6 +17,105 @@ app = Flask(__name__)
 # Разрешаем CORS для фронтенда на localhost (Vite dev-server).
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+# сжатие
+
+from io import BytesIO
+from PIL import Image
+
+MAX_DIMENSION = 512
+MAX_SIZE_BYTES = 200 * 1024
+JPEG_QUALITY_STEPS = [85, 70, 55, 40]
+
+def compress_avatar(raw: bytes, mime: str) -> tuple[bytes, str]:
+    try:
+        img = Image.open(BytesIO(raw))
+    except Exception:
+        return raw, mime
+
+    if img.mode not in ("RGB", "RGBA"):
+        img = img.convert("RGBA" if img.mode == "P" else "RGB")
+
+    width, height = img.size
+    if max(width, height) > MAX_DIMENSION:
+        ratio = MAX_DIMENSION / max(width, height)
+        img = img.resize(
+            (int(width * ratio), int(height * ratio)),
+            Image.LANCZOS,
+        )
+
+    target_mime = "image/jpeg"
+    save_kwargs = {"optimize": True}
+    if img.mode == "RGBA":
+        target_mime = "image/png"
+        save_kwargs = {"optimize": True}
+    else:
+        save_kwargs["quality"] = JPEG_QUALITY_STEPS[0]
+
+    buffer = BytesIO()
+    img.save(buffer, format=target_mime.split("/")[-1].upper(), **save_kwargs)
+    data = buffer.getvalue()
+
+    if target_mime == "image/jpeg" and len(data) > MAX_SIZE_BYTES:
+        for q in JPEG_QUALITY_STEPS[1:]:
+            buffer = BytesIO()
+            img.save(buffer, format="JPEG", optimize=True, quality=q)
+            data = buffer.getvalue()
+            if len(data) <= MAX_SIZE_BYTES:
+                break
+
+    return data, target_mime
+
+#
+
+from dataclasses import dataclass
+from typing import Optional
+
+@dataclass
+class User:
+    id: int
+    login: str
+    password_hash: str
+    full_name: Optional[str] = None
+    avatar_data: Optional[bytes] = None
+    avatar_mime_type: Optional[str] = None
+
+    def to_dict(self, include_avatar: bool = False) -> dict:
+        result = {
+            "id": self.id,
+            "login": self.login,
+            "full_name": self.full_name,
+            "has_avatar": self.avatar_data is not None,
+        }
+        if include_avatar and self.avatar_data is not None:
+            import base64
+            result["avatar"] = {
+                "data": base64.b64encode(self.avatar_data).decode("ascii"),
+                "mime_type": self.avatar_mime_type,
+            }
+        return result
+
+def save_avatar(self, user_id: int, data: bytes, mime_type: str) -> None:
+    with self._connect() as conn, conn.cursor() as cur:
+        cur.execute(
+            "UPDATE users SET avatar_data = %s, avatar_mime_type = %s WHERE id = %s",
+            (data, mime_type, user_id),
+        )
+
+def get_avatar(self, user_id: int):
+    with self._connect() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT avatar_data, avatar_mime_type FROM users WHERE id = %s",
+            (user_id,),
+        )
+        return cur.fetchone()
+
+def delete_avatar(self, user_id: int) -> None:
+    with self._connect() as conn, conn.cursor() as cur:
+        cur.execute(
+            "UPDATE users SET avatar_data = NULL, avatar_mime_type = NULL WHERE id = %s",
+            (user_id,),
+        )
+
 # ---------------------------------------------------------------------------
 # DB
 # ---------------------------------------------------------------------------
@@ -964,6 +1063,57 @@ def update_card(board_id: int, card_id: int):
             )
 
     return ok({"cardId": card_id})
+
+
+import os
+from flask import Blueprint, request, jsonify, send_file
+from io import BytesIO
+
+ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+
+users_bp = Blueprint("users", __name__, url_prefix="/api/users")
+
+@users_bp.post("/<int:user_id>/avatar")
+def upload_avatar(user_id):
+    if "file" not in request.files:
+        return jsonify({"error": "file is required"}), 400
+
+    f = request.files["file"]
+    if not f.mimetype in ALLOWED_MIME:
+        return jsonify({"error": "unsupported mime"}), 400
+
+    raw = f.read()
+    if len(raw) > MAX_UPLOAD_BYTES:
+        return jsonify({"error": "file too large"}), 413
+
+    data, mime = compress_avatar(raw, f.mimetype)
+    db.save_avatar(user_id, data, mime)
+
+    return jsonify({"ok": True, "size": len(data), "mime": mime})
+
+
+@users_bp.get("/<int:user_id>/avatar")
+def get_avatar(user_id):
+    row = db.get_avatar(user_id)
+    if not row or not row[0]:
+        return jsonify({"error": "not found"}), 404
+    data, mime = row
+    return send_file(BytesIO(data), mimetype=mime)
+
+
+@users_bp.delete("/<int:user_id>/avatar")
+def delete_avatar(user_id):
+    db.delete_avatar(user_id)
+    return jsonify({"ok": True})
+
+
+# Чтобы фронт знал, есть ли аватар, не тянув его отдельно
+@auth_bp.get("/me")
+@jwt_required
+def me():
+    user = db.get_user_by_id(g.user_id)
+    return jsonify(user.to_dict(include_avatar=False))
 
 # ---------------------------------------------------------------------------
 # Entry point
