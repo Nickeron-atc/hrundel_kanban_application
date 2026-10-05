@@ -4,7 +4,8 @@ Hrundel Kanban — Flask backend (stub endpoints).
 Все маршруты возвращают хардкодные данные.
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import os
 import psycopg2
@@ -69,6 +70,30 @@ def compress_avatar(raw: bytes, mime: str) -> tuple[bytes, str]:
 
 from dataclasses import dataclass
 from typing import Optional
+
+db = SQLAlchemy(app)
+
+class Board(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    columns = db.relationship('Column', backref='board', cascade="all, delete-orphan")
+
+class Column(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    order = db.Column(db.Integer, nullable=False)
+    board_id = db.Column(db.Integer, db.ForeignKey('board.id'), nullable=False)
+    cards = db.relationship('Card', backref='column', cascade="all, delete-orphan", order_by='Card.order')
+
+class Card(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    order = db.Column(db.Integer, nullable=False)
+    column_id = db.Column(db.Integer, db.ForeignKey('column.id'), nullable=False)
+
+with app.app_context():
+    db.create_all()
 
 @dataclass
 class User:
@@ -920,39 +945,39 @@ def delete_card(board_id: int, card_id: int):
         return err("Карточка не найдена", 404)
     return ok({"deleted": card_id})
 
-@app.route("/api/boards/<int:board_id>/cards", methods=["PATCH"])
-def move_card(board_id: int):
-    user_id = get_current_user_id()
-    if not user_id or not user_owns_board(user_id, board_id):
-        return err("Доска не найдена или нет прав", 404)
+from flask import request, jsonify
 
-    body = request.get_json(silent=True) or {}
-    card_id = body.get("cardId")
-    target_column_id = body.get("targetColumnId")
-    if not card_id or not target_column_id:
-        return err("Не указан cardId или targetColumnId")
+@app.route('/api/boards/<int:board_id>', methods=['GET'])
+def get_board(board_id):
+    board = Board.query.get_or_404(board_id)
+    return jsonify({
+        'id': board.id,
+        'title': board.title,
+        'columns': [
+            {
+                'id': col.id,
+                'title': col.title,
+                'order': col.order,
+                'cards': [
+                    {'id': card.id, 'title': card.title, 'description': card.description, 'order': card.order}
+                    for card in col.cards
+                ]
+            }
+            for col in sorted(board.columns, key=lambda c: c.order)
+        ]
+    })
 
-    try:
-        row = execute(
-            """
-            UPDATE cards
-            SET column_id = %s,
-                position  = COALESCE(
-                        (SELECT MAX(position) + 1 FROM cards WHERE column_id = %s), 0
-                            ),
-                updated_at = now()
-            WHERE id = %s AND board_id = %s
-                RETURNING id, column_id, position
-            """,
-            (target_column_id, target_column_id, card_id, board_id),
-            returning=True,
-        )
-    except psycopg2.errors.ForeignKeyViolation:
-        return err("Целевая колонка не принадлежит этой доске", 400)
+@app.route('/api/cards/move', methods=['POST'])
+def move_card():
+    data = request.json
+    card = Card.query.get_or_404(data['card_id'])
+    target_column = Column.query.get_or_404(data['target_column_id'])
 
-    if not row:
-        return err("Карточка не найдена", 404)
-    return ok({"cardId": row["id"], "targetColumnId": row["column_id"]})
+    card.column_id = target_column.id
+    card.order = data['new_order']
+
+    db.session.commit()
+    return jsonify({'status': 'success'})
 
 # backend/src/backend.py - добавляем новые эндпоинты
 
