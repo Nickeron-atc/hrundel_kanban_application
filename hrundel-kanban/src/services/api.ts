@@ -182,14 +182,47 @@ export const api = {
   // },
 
   /** PATCH /api/boards/:boardId/cards — переместить карточку */
-  moveCard(
-      boardId: string,
-      cardId: string,
-      targetColumnId: string,
+  // moveCard(
+  //     boardId: string,
+  //     cardId: string,
+  //     targetColumnId: string,
+  // ): Promise<ApiResponse<{ cardId: string; targetColumnId: string }>> {
+  //   return request(`/boards/${boardId}/cards`, {
+  //     method: "PATCH",
+  //     body: JSON.stringify({ cardId, targetColumnId }),
+  //   });
+  // },
+
+    moveCard(
+    boardId: string,
+    cardId: string,
+    targetColumnId: string,
   ): Promise<ApiResponse<{ cardId: string; targetColumnId: string }>> {
-    return request(`/boards/${boardId}/cards`, {
+    return request("/cards/move", {
+      method: "POST",
+      body: JSON.stringify({
+        card_id: parseInt(cardId, 10),
+        target_column_id: parseInt(targetColumnId, 10),
+        board_id: parseInt(boardId, 10),
+      }),
+    });
+  },
+
+    updateCard(
+    boardId: string,
+    cardId: string,
+    updates: { title?: string; description?: string; color?: string; tags?: { id: string }[] }
+  ): Promise<ApiResponse<{ card: Card }>> {
+    const payload: Record<string, unknown> = {};
+    if (updates.title !== undefined) payload.title = updates.title;
+    if (updates.description !== undefined) payload.description = updates.description;
+    if (updates.color !== undefined) payload.color = updates.color;
+    if (updates.tags !== undefined) {
+      payload.tagIds = updates.tags.map((t) => parseInt(t.id, 10));
+    }
+    return request(`/boards/${boardId}/cards/${cardId}`, {
       method: "PATCH",
-      body: JSON.stringify({ cardId, targetColumnId }),
+      body: JSON.stringify(payload),
     });
   },
 
