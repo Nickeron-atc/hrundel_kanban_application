@@ -311,7 +311,7 @@ def create_app():
     #             "card": serialize_card(card),
     #             "boardId": str(board.id),
     #         },
-        }), 200
+        # }), 200
 
 
     @app.route("/api/cards/move", methods=["POST"])
@@ -454,7 +454,7 @@ def create_app():
     #         "data": {"user": g.current_user.to_dict()},
     #         })
 
-        @app.route("/api/me", methods=["GET"])
+    @app.route("/api/me", methods=["GET"])
     @jwt_required
     def get_me():
         return jsonify({
