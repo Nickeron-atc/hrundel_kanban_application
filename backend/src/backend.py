@@ -280,6 +280,40 @@ def create_app():
 
 
 
+    # @app.route("/api/cards/move", methods=["POST"])
+    # @jwt_required
+    # def move_card():
+    #     body = request.get_json(silent=True) or {}
+    #     card_id = body.get("card_id")
+    #     target_column_id = body.get("target_column_id")
+    #     board_id = body.get("board_id")
+
+    #     if not card_id or not target_column_id or not board_id:
+    #         return err("Необходимы card_id, target_column_id и board_id")
+
+    #     card = Card.query.get(card_id)
+    #     target_col = Column.query.get(target_column_id)
+
+    #     if not card or not target_col:
+    #         return err("Карточка или колонка не найдена", 404)
+
+    #     if not user_owns_board(g.current_user.id, target_col.board_id):
+    #         return err("Нет прав", 403)
+
+    #     card.column_id = target_column_id
+    #     db.session.commit()
+    #     # return jsonify({"status": "ok", "data": {"cardId": card_id, "targetColumnId": target_column_id}})
+    #     # backend/src/backend.py
+    #     # backend/src/backend.py
+    #     return jsonify({
+    #         "status": "ok",
+    #         "data": {
+    #             "card": serialize_card(card),
+    #             "boardId": str(board.id),
+    #         },
+        }), 200
+
+
     @app.route("/api/cards/move", methods=["POST"])
     @jwt_required
     def move_card():
@@ -302,9 +336,9 @@ def create_app():
 
         card.column_id = target_column_id
         db.session.commit()
-        # return jsonify({"status": "ok", "data": {"cardId": card_id, "targetColumnId": target_column_id}})
-        # backend/src/backend.py
-        # backend/src/backend.py
+
+        board = Board.query.get(target_col.board_id)
+
         return jsonify({
             "status": "ok",
             "data": {
@@ -312,7 +346,6 @@ def create_app():
                 "boardId": str(board.id),
             },
         }), 200
-
 
     @app.route("/api/boards/<int:board_id>/tags", methods=["GET"])
     @jwt_required
@@ -399,12 +432,34 @@ def create_app():
 
     return app
 
-    @app.route("/api/me", methods=["GET"])
+    # @app.route("/api/me", methods=["GET"])
+    # @jwt_required
+    # def get_me():
+    #     return jsonify({
+    #     "status": "ok",
+    #     "data": {"user": g.current_user.to_dict()},
+    #     })
+
+    # @app.route("/api/users/<int:user_id>", methods=["PATCH"])
+    # @jwt_required
+    # def update_user(user_id):
+    #     if g.current_user.id != user_id:
+    #         return err("Нет прав", 403)
+    #     body = request.get_json(silent=True) or {}
+    #     if "full_name" in body:
+    #         g.current_user.full_name = body["full_name"]
+    #         db.session.commit()
+    #         return jsonify({
+    #         "status": "ok",
+    #         "data": {"user": g.current_user.to_dict()},
+    #         })
+
+        @app.route("/api/me", methods=["GET"])
     @jwt_required
     def get_me():
         return jsonify({
-        "status": "ok",
-        "data": {"user": g.current_user.to_dict()},
+            "status": "ok",
+            "data": {"user": g.current_user.to_dict()},
         })
 
     @app.route("/api/users/<int:user_id>", methods=["PATCH"])
@@ -415,11 +470,13 @@ def create_app():
         body = request.get_json(silent=True) or {}
         if "full_name" in body:
             g.current_user.full_name = body["full_name"]
-            db.session.commit()
-            return jsonify({
+        db.session.commit()
+        return jsonify({
             "status": "ok",
             "data": {"user": g.current_user.to_dict()},
-            })
+        })
+
+    return app
 
 
 if __name__ == "__main__":
