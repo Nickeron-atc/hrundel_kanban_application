@@ -107,7 +107,14 @@ async function request<T>(
 
 export const api = {
   /** POST /api/login — { login, password } → { auth_token } */
-  login(login: string, password: string): Promise<ApiResponse<{ auth_token: string }>> {
+  // login(login: string, password: string): Promise<ApiResponse<{ auth_token: string }>> {
+  //   return request("/login", {
+  //     method: "POST",
+  //     body: JSON.stringify({ login, password }),
+  //   });
+  // },
+
+  login(login: string, password: string): Promise<ApiResponse<{ token: string; user: { id: number; login: string; full_name: string; has_avatar: boolean } }>> {
     return request("/login", {
       method: "POST",
       body: JSON.stringify({ login, password }),
@@ -115,10 +122,17 @@ export const api = {
   },
 
   /** POST /api/register — { login, password, fullName } → { status } */
+  // register(login: string, password: string, fullName: string): Promise<ApiResponse<{ status: string }>> {
+  //   return request("/register", {
+  //     method: "POST",
+  //     body: JSON.stringify({ login, password, fullName }),
+  //   });
+  // },
+
   register(login: string, password: string, fullName: string): Promise<ApiResponse<{ status: string }>> {
     return request("/register", {
       method: "POST",
-      body: JSON.stringify({ login, password, fullName }),
+      body: JSON.stringify({ login, password, full_name: fullName }),
     });
   },
 
@@ -160,11 +174,16 @@ export const api = {
   },
 
   /** DELETE /api/boards/:boardId/cards/:cardId */
-  deleteCard(
-      boardId: string,
-      cardId: string,
-  ): Promise<ApiResponse<{ deleted: string }>> {
-    return request(`/boards/${boardId}/cards/${cardId}`, {
+  // deleteCard(
+  //     boardId: string,
+  //     cardId: string,
+  // ): Promise<ApiResponse<{ deleted: string }>> {
+  //   return request(`/boards/${boardId}/cards/${cardId}`, {
+  //     method: "DELETE",
+  //   });
+  // },
+    deleteCard(boardId: number, cardId: number): Promise<ApiResponse<null>> {
+    return request(`/cards/${cardId}`, {
       method: "DELETE",
     });
   },
@@ -271,7 +290,14 @@ return request(`/boards/${boardId}/tags`);
     return request("/auth/logout", { method: "POST" });
   },
   /** POST /api/boards/:boardId/columns — { title } → { column: Column } */
-  createColumn(boardId: string, title: string): Promise<ApiResponse<{ column: Column }>> {
+  // createColumn(boardId: string, title: string): Promise<ApiResponse<{ column: Column }>> {
+  //   return request(`/boards/${boardId}/columns`, {
+  //     method: "POST",
+  //     body: JSON.stringify({ title }),
+  //   });
+  // },
+
+    createColumn(boardId: string, title: string): Promise<ApiResponse<{ board: Board }>> {
     return request(`/boards/${boardId}/columns`, {
       method: "POST",
       body: JSON.stringify({ title }),
@@ -280,11 +306,17 @@ return request(`/boards/${boardId}/tags`);
 
 
   /** DELETE /api/boards/:boardId/columns/:columnId */
-  deleteColumn(boardId: string, columnId: string): Promise<ApiResponse<{ deleted: string }>> {
-    return request(`/boards/${boardId}/columns/${columnId}`, {
+  // deleteColumn(boardId: string, columnId: string): Promise<ApiResponse<{ deleted: string }>> {
+  //   return request(`/boards/${boardId}/columns/${columnId}`, {
+  //     method: "DELETE",
+  //   });
+  // },
+
+    deleteColumn(boardId: string, columnId: string): Promise<ApiResponse<{ deleted: string }>> {
+    return request(`/columns/${columnId}`, {
       method: "DELETE",
     });
-  },
+},
 };
 
 export const auth = {

@@ -15,12 +15,22 @@ def serialize_tag(tag):
     return {"id": str(tag.id), "name": tag.name, "color": tag.color}
 
 
+# def serialize_card(card):
+#     return {
+#         "id": str(card.id),
+#         "title": card.title,
+#         "description": card.description or "",
+#         "color": card.color or "",
+#         "tags": [serialize_tag(t) for t in card.tags],
+#     }
+
 def serialize_card(card):
     return {
         "id": str(card.id),
         "title": card.title,
         "description": card.description or "",
         "color": card.color or "",
+        "columnId": str(card.column_id),
         "tags": [serialize_tag(t) for t in card.tags],
     }
 
@@ -292,7 +302,17 @@ def create_app():
 
         card.column_id = target_column_id
         db.session.commit()
-        return jsonify({"status": "ok", "data": {"cardId": card_id, "targetColumnId": target_column_id}})
+        # return jsonify({"status": "ok", "data": {"cardId": card_id, "targetColumnId": target_column_id}})
+        # backend/src/backend.py
+        # backend/src/backend.py
+        return jsonify({
+            "status": "ok",
+            "data": {
+                "card": serialize_card(card),
+                "boardId": str(board.id),
+            },
+        }), 200
+
 
     @app.route("/api/boards/<int:board_id>/tags", methods=["GET"])
     @jwt_required
