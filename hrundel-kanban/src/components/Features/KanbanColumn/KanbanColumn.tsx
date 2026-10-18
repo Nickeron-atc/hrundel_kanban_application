@@ -17,30 +17,58 @@ import styles from "./KanbanColumn.module.css";
 // }
 
 
+// interface KanbanColumnProps {
+// column: Column;
+//   draggingId: string | null;
+//   dragOverColumnId: string | null;
+//   onDragStart: (e: React.DragEvent<HTMLDivElement>, cardId: string) => void;
+//   onDragOver: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
+//   onDrop: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
+//   onDragLeave: () => void;
+//   onAddCard: (columnId: string) => void;
+//   onDeleteColumn?: (columnId: string) => void;
+//   onDeleteCard?: (cardId: string) => void;
+// }
+// export default function KanbanColumn({
+//   column,
+//   // boardId,
+//   draggingId,
+//   dragOverColumnId,
+//   onDragStart,
+//   onDragOver,
+//   onDrop,
+//   onDragLeave,
+//   onAddCard,
+//   onDeleteColumn,
+//  onDeleteCard
+// }: KanbanColumnProps) {
+
 interface KanbanColumnProps {
-  column: Column;
-  draggingId: string | null;
-  dragOverColumnId: string | null;
-  onDragStart: (e: React.DragEvent<HTMLDivElement>, cardId: string) => void;
-  onDragOver: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
-  onDrop: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
-  onDragLeave: () => void;
-  onAddCard: (columnId: string) => void;
-  onDeleteColumn?: (columnId: string) => void;
-  onDeleteCard?: (cardId: string) => void;
+column: Column;
+boardId: string;
+draggingId: string | null;
+dragOverColumnId: string | null;
+onDragStart: (e: React.DragEvent<HTMLDivElement>, cardId: string) => void;
+onDragOver: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
+onDrop: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
+onDragLeave: () => void;
+onAddCard: (columnId: string) => void;
+onDeleteColumn?: (columnId: string) => void;
+onDeleteCard?: (cardId: string) => void;
 }
+
 export default function KanbanColumn({
-  column,
-  // boardId,
-  draggingId,
-  dragOverColumnId,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragLeave,
-  onAddCard,
-  onDeleteColumn,
- onDeleteCard
+column,
+boardId,
+draggingId,
+dragOverColumnId,
+onDragStart,
+onDragOver,
+onDrop,
+onDragLeave,
+onAddCard,
+onDeleteColumn,
+onDeleteCard
 }: KanbanColumnProps) {
   const isDragOver = dragOverColumnId === column.id;
 
@@ -71,7 +99,7 @@ export default function KanbanColumn({
         )}
       </div>
 
-      <div className={styles.cards}>
+      {/* <div className={styles.cards}>
         {column.cards.map((card) => (
           <KanbanCard
             key={card.id}
@@ -81,6 +109,19 @@ export default function KanbanColumn({
             onDeleteCard={onDeleteCard}
           />
         ))}
+      </div> */}
+
+      <div className={styles.cards}>
+      {column.cards.map((card) => (
+      <KanbanCard
+      key={card.id}
+      boardId={boardId}
+      card={card}
+      onDragStart={onDragStart}
+      draggingId={draggingId}
+      onDeleteCard={onDeleteCard}
+      />
+      ))}
       </div>
 
       <button

@@ -226,6 +226,46 @@ export const api = {
     });
   },
 
+  getTags(boardId: string): Promise<ApiResponse<{ tags: Tag[] }>> {
+return request(`/boards/${boardId}/tags`);
+},
+
+  createTag(boardId: string, name: string, color: string): Promise<ApiResponse<{ tag: Tag }>> {
+    return request(`/boards/${boardId}/tags`, {
+    method: "POST",
+    body: JSON.stringify({ name, color }),
+    });
+  },
+
+  deleteTag(tagId: string): Promise<ApiResponse<{ deleted: string }>> {
+    return request(`/tags/${tagId}`, { method: "DELETE" });
+  },
+
+  getMe(): Promise<ApiResponse<{ user: { id: number; login: string; full_name: string; has_avatar: boolean } }>> {
+    return request("/me");
+  },
+
+  updateProfile(userId: string, data: { full_name?: string }): Promise<ApiResponse<{ user: unknown }>> {
+    return request(`/users/${userId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+  },
+
+  uploadAvatar(userId: string, file: File): Promise<ApiResponse<{ ok: boolean }>> {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    return request(`/users/${userId}/avatar`, {
+    method: "POST",
+    body: formData,
+    headers: {},
+    });
+  },
+
+  deleteAvatar(userId: string): Promise<ApiResponse<{ ok: boolean }>> {
+    return request(`/users/${userId}/avatar`, { method: "DELETE" });
+  },
+
   /** POST /api/auth/logout */
   logout(): Promise<ApiResponse<{ status: string }>> {
     return request("/auth/logout", { method: "POST" });

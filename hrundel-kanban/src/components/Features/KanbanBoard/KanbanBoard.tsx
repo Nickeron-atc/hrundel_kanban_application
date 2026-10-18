@@ -123,9 +123,25 @@ export default function KanbanBoard({
         <div className={styles.board}>
 
             <div className={styles.columns}>
+                {/* {board.columns.map((column) => (
+                    <KanbanColumn
+                        key={column.id}
+                        column={column}
+                        draggingId={draggingCardId}
+                        dragOverColumnId={dragOverColumnId}
+                        onDragStart={handleDragStart}
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                        onDragLeave={handleDragLeave}
+                        onAddCard={openAddModal}
+                        onDeleteColumn={onDeleteColumn}
+                        onDeleteCard={onDeleteCard}
+                    />
+                ))} */}
                 {board.columns.map((column) => (
                     <KanbanColumn
                         key={column.id}
+                        boardId={board.id}
                         column={column}
                         draggingId={draggingCardId}
                         dragOverColumnId={dragOverColumnId}

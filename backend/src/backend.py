@@ -379,6 +379,28 @@ def create_app():
 
     return app
 
+    @app.route("/api/me", methods=["GET"])
+    @jwt_required
+    def get_me():
+        return jsonify({
+        "status": "ok",
+        "data": {"user": g.current_user.to_dict()},
+        })
+
+    @app.route("/api/users/<int:user_id>", methods=["PATCH"])
+    @jwt_required
+    def update_user(user_id):
+        if g.current_user.id != user_id:
+            return err("Нет прав", 403)
+        body = request.get_json(silent=True) or {}
+        if "full_name" in body:
+            g.current_user.full_name = body["full_name"]
+            db.session.commit()
+            return jsonify({
+            "status": "ok",
+            "data": {"user": g.current_user.to_dict()},
+            })
+
 
 if __name__ == "__main__":
     app = create_app()
