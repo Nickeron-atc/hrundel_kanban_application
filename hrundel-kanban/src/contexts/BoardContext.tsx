@@ -1,6 +1,6 @@
 // src/contexts/BoardContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
-import { api, Board } from "../services/api";
+import { api, Board, User } from "../services/api";
 
 interface BoardContextType {
     boards: Board[];
@@ -10,6 +10,8 @@ interface BoardContextType {
     openBoardsModal: () => void;
     closeBoardsModal: () => void;
     reloadBoards: () => Promise<void>;
+    currentUser: User | null;
+    reloadUser: () => Promise<void>;
 }
 
 const BoardContext = createContext<BoardContextType | null>(null);
@@ -41,26 +43,38 @@ export function BoardProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+    const reloadUser = useCallback(async () => {
+    const res = await api.getMe();
+    if (res.status === "ok") {
+    setCurrentUser(res.data.user);
+    }
+    }, []);
+
     // Добавляем reloadBoards в зависимости, теперь ESLint не будет ругаться,
     // а цикл прервется, так как ссылка на функцию больше не меняется.
     useEffect(() => {
         if (localStorage.getItem("auth_token")) {
-            reloadBoards();
+        reloadBoards();
+        reloadUser();
         }
-    }, [reloadBoards]);
+        }, [reloadBoards, reloadUser]);
 
     return (
         <BoardContext.Provider
             value={{
-                boards,
-                currentBoardId,
-                setCurrentBoardId,
-                isBoardsModalOpen,
-                openBoardsModal: () => setIsBoardsModalOpen(true),
-                closeBoardsModal: () => setIsBoardsModalOpen(false),
-                reloadBoards,
+            boards,
+            currentBoardId,
+            setCurrentBoardId,
+            isBoardsModalOpen,
+            openBoardsModal: () => setIsBoardsModalOpen(true),
+            closeBoardsModal: () => setIsBoardsModalOpen(false),
+            reloadBoards,
+            currentUser,
+            reloadUser,
             }}
-        >
+            >
             {children}
         </BoardContext.Provider>
     );

@@ -6,8 +6,8 @@ import Button from "../../UI/Button/Button";
 import UserAvatar from "../../UI/UserAvatar/UserAvatar"; // <-- Импортируем компонент
 import styles from "./Navbar.module.css";
 import hrundel from "../../../assets/hrundel.svg";
-import moisey from "../../../assets/moisey.png";
 import UserProfileModal from "../UserProfileModal/UserProfileModal";
+import { useBoards } from "../../../contexts/BoardContext";
 
 interface NavbarProps {
   currentBoardTitle?: string;
@@ -20,6 +20,7 @@ export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarP
   const location = useLocation();
   const loggedIn = auth.isLoggedIn();
   const isOnWorkSession = location.pathname === "/worksession";
+  const { currentUser } = useBoards();
 
   const handleLogout = async () => {
     await api.logout();
@@ -70,7 +71,12 @@ export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarP
                     className={styles.userContainer}
                 >
                   {/* <-- Заменяем img и span на переиспользуемый компонент */}
-                  <UserAvatar src={moisey} name="username" size="md" showName={true} />
+                  <UserAvatar
+                    src={currentUser?.has_avatar ? `/api/users/${currentUser.id}/avatar` : ""}
+                    name={currentUser?.full_name || currentUser?.login || ""}
+                    size="md"
+                    showName={true}
+                    />
                 </button>
             ) : (
                 <div></div>

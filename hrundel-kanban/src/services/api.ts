@@ -19,6 +19,13 @@ export interface ApiResponse<T = unknown> {
 
 // src/services/api.ts - добавляем новые методы
 
+export interface User {
+id: number;
+login: string;
+full_name: string;
+has_avatar: boolean;
+}
+
 export interface Tag {
   id: string;
   name: string;
@@ -129,7 +136,7 @@ export const api = {
   //   });
   // },
 
-  login(login: string, password: string): Promise<ApiResponse<{ token: string; user: { id: number; login: string; full_name: string; has_avatar: boolean } }>> {
+  login(login: string, password: string): Promise<ApiResponse<{ token: string; user: User }>> {
     return request("/login", {
       method: "POST",
       body: JSON.stringify({ login, password }),
@@ -288,7 +295,7 @@ return request(`/boards/${boardId}/tags`);
     return request(`/tags/${tagId}`, { method: "DELETE" });
   },
 
-  getMe(): Promise<ApiResponse<{ user: { id: number; login: string; full_name: string; has_avatar: boolean } }>> {
+  getMe(): Promise<ApiResponse<{ user: User }>> {
     return request("/me");
   },
 
