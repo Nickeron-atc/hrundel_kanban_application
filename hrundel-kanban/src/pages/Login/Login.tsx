@@ -5,33 +5,55 @@ import Input from "../../components/UI/Input/Input";
 import Button from "../../components/UI/Button/Button";
 import styles from "./Login.module.css";
 import hrundel from "../../assets/hrundel.svg";
+import { useBoards } from "../../contexts/BoardContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { reloadUser, reloadBoards } = useBoards();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (!login.trim() || !password.trim()) {
-      setError("Заполните все поля");
-      return;
-    }
-    setLoading(true);
-    const res = await api.login(login.trim(), password);
-    setLoading(false);
+  // const handleSubmit = async (e: FormEvent) => {
+  //   e.preventDefault();
+  //   setError("");
+  //   if (!login.trim() || !password.trim()) {
+  //     setError("Заполните все поля");
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   const res = await api.login(login.trim(), password);
+  //   setLoading(false);
 
-    if (res.status === "ok") {
-      // Изменено с res.data.auth_token на res.data.token
-      auth.setToken(res.data.token);
-      navigate("/worksession");
-    } else {
-      setError(res.message ?? "Ошибка авторизации");
-    }
-  };
+  //   if (res.status === "ok") {
+  //     // Изменено с res.data.auth_token на res.data.token
+  //     auth.setToken(res.data.token);
+  //     navigate("/worksession");
+  //   } else {
+  //     setError(res.message ?? "Ошибка авторизации");
+  //   }
+  // };
+
+  const handleSubmit = async (e: FormEvent) => {
+            e.preventDefault();
+            setError("");
+            if (!login.trim() || !password.trim()) {
+                setError("Заполните все поля");
+                return;
+            }
+            setLoading(true);
+            const res = await api.login(login.trim(), password);
+            setLoading(false);
+            if (res.status === "ok") {
+                auth.setToken(res.data.token);
+                await reloadUser();
+                await reloadBoards();
+                navigate("/worksession");
+            } else {
+                setError(res.message ?? "Ошибка авторизации");
+            }
+        };
 
   return (
     <div className={styles.loginPage}>
