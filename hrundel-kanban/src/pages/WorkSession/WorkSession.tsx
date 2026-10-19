@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { auth, api } from "../../services/api";
 import KanbanBoard from "../../components/Features/KanbanBoard/KanbanBoard";
 import { ConfirmDialog } from "../../components/UI/ConfirmDialog/ConfirmDialog";
+import EmptyBoardState from "../../components/UI/EmptyBoardState/EmptyBoardState";
 import { useBoards } from "../../contexts/BoardContext";
 import { useState } from "react";
 import styles from "./WorkSession.module.css";
@@ -127,7 +128,7 @@ export default function WorkSession() {
               onUpdateCard={handleUpdateCard}
           />
         ) : (
-            <div className={styles.noBoard}>Нет доступных досок</div>
+          <EmptyBoardState />
         )}
 
         <ConfirmDialog
