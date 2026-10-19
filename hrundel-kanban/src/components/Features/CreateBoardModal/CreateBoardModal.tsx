@@ -1,10 +1,8 @@
-// src/components/Features/CreateBoardModal/CreateBoardModal.tsx
-// Модальное окно создания доски с выбором: создать свою или присоединиться по ссылке.
-// Заменяет старый AddBoardModal.
 import { useState } from "react";
 import { AppModal } from "../../UI/AppModal/AppModal";
 import Input from "../../UI/Input/Input";
 import Button from "../../UI/Button/Button";
+import { api } from "../../../services/api";
 
 type ModalStep = "choice" | "create" | "join";
 
@@ -15,17 +13,16 @@ interface CreateBoardModalProps {
 }
 
 export default function CreateBoardModal({
-                                             open,
-                                             onClose,
-                                             onCreateBoard,
-                                         }: CreateBoardModalProps) {
+    open,
+    onClose,
+    onCreateBoard,
+}: CreateBoardModalProps) {
     const [step, setStep] = useState<ModalStep>("choice");
     const [title, setTitle] = useState("");
     const [link, setLink] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // Сброс состояния при закрытии
     const handleClose = () => {
         setStep("choice");
         setTitle("");
@@ -56,10 +53,8 @@ export default function CreateBoardModal({
             setError("Вставьте ссылку на доску");
             return;
         }
-        
         setLoading(true);
         setError("");
-        
         try {
             const shareToken = link.split("/join/")[1];
             if (!shareToken) {
@@ -67,10 +62,8 @@ export default function CreateBoardModal({
                 setLoading(false);
                 return;
             }
-            
             const res = await api.joinBoard(shareToken);
             setLoading(false);
-            
             if (res.status === "ok") {
                 handleClose();
                 window.location.reload();
@@ -91,8 +84,8 @@ export default function CreateBoardModal({
                 step === "choice"
                     ? "Новая доска"
                     : step === "create"
-                        ? "Создать доску"
-                        : "Присоединиться к доске"
+                    ? "Создать доску"
+                    : "Присоединиться к доске"
             }
             size="sm"
             footer={
@@ -155,7 +148,6 @@ export default function CreateBoardModal({
                             </div>
                         </div>
                     </button>
-
                     <button
                         onClick={() => setStep("join")}
                         style={{
@@ -192,7 +184,6 @@ export default function CreateBoardModal({
                     </button>
                 </div>
             )}
-
             {step === "create" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                     <Input
@@ -205,7 +196,6 @@ export default function CreateBoardModal({
                     />
                 </div>
             )}
-
             {step === "join" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                     <Input

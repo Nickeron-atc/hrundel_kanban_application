@@ -1,4 +1,3 @@
-// hrundel-kanban/src/components/UI/EmptyBoardState/EmptyBoardState.tsx
 import { useState } from "react";
 import styles from "./EmptyBoardState.module.css";
 import hrundel from "../../../assets/hrundel.svg";
@@ -12,15 +11,14 @@ export default function EmptyBoardState() {
 
     const handleCreateBoard = async (title: string) => {
         const res = await api.createBoard(title);
-        if (res.status === "ok") {
+        if (res.status === "ok" && res.data?.board?.id) {
+            const newBoardId = res.data.board.id;
+            setCurrentBoardId(newBoardId);
             await reloadBoards();
-            if (res.data?.board?.id) {
-                setCurrentBoardId(res.data.board.id);
-            }
             setCreateModalOpen(false);
             return { ok: true };
         }
-        return { ok: false, message: res.message };
+        return { ok: false, message: res.message || "Не удалось создать доску" };
     };
 
     return (
