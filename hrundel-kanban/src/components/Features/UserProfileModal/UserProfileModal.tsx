@@ -16,7 +16,9 @@ import UserAvatar from "../../UI/UserAvatar/UserAvatar";
 import styles from "./UserProfileModal.module.css";
 import { useBoards } from "../../../contexts/BoardContext";
 import { api, auth } from "../../../services/api";
+import { useQueryClient } from "@tanstack/react-query";
 
+const queryClient = useQueryClient();
 
 interface UserProfileModalProps {
     open: boolean;
@@ -87,18 +89,22 @@ export default function UserProfileModal({ open, onClose }: UserProfileModalProp
     const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        
         const token = auth.getToken();
         if (!token) return;
+        
         const payload = token.split(".")[1];
         const userId = JSON.parse(atob(payload)).user_id;
+        
         setUploading(true);
         const res = await api.uploadAvatar(String(userId), file);
         setUploading(false);
+        
         if (res.status === "ok") {
-            setAvatarUrl(`/api/users/${userId}/avatar?v=${Date.now()}`);
-            await reloadUser();
+            queryClient.invalidateQueries({ queryKey: ["currentUser"] });
             bumpAvatarVersion();
         }
+        
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 

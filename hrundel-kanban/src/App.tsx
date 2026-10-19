@@ -9,6 +9,7 @@ import ErrorPage from "./pages/Error/ErrorPage";
 import HrundelDecor from "./components/UI/HrundelDecor/HrundelDecor";
 import { BoardProvider, useBoards } from "./contexts/BoardContext";
 import BoardsListModal from "./components/Features/BoardsListModal/BoardsListModal";
+import ErrorBoundary from "./components/UI/ErrorBoundary/ErrorBoundary";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -45,7 +46,9 @@ export default function App() {
     return (
         <BrowserRouter basename={base}>
             <BoardProvider>
-                <AppContent />
+                <ErrorBoundary>
+                    <AppContent />
+                </ErrorBoundary>
             </BoardProvider>
         </BrowserRouter>
     );
