@@ -362,10 +362,22 @@ def create_app():
         if "color" in body:
             card.color = body["color"]
         if "tagIds" in body:
-            tags = Tag.query.filter(
-                Tag.id.in_(body["tagIds"]),
-                Tag.board_id == board_id,
-            ).all()
+            valid_tag_ids = []
+            for tid in body["tagIds"]:
+                try:
+                    int_tid = int(tid)
+                    if 0 < int_tid <= 2147483647:
+                        valid_tag_ids.append(int_tid)
+                except (ValueError, TypeError):
+                    pass
+            
+            if valid_tag_ids:
+                tags = Tag.query.filter(
+                    Tag.id.in_(valid_tag_ids),
+                    Tag.board_id == board_id,
+                ).all()
+            else:
+                tags = []
             card.tags = tags
 
         db.session.commit()
