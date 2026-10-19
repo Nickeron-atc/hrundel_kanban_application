@@ -25,13 +25,28 @@ export interface Tag {
   color: string;
 }
 
+// export interface Card {
+//   id: string;
+//   title: string;
+//   description: string;
+//   columnId?: string;
+//   color?: string;
+//   tags?: Tag[];
+// }
+
+export interface CardCreator {
+    name: string;
+    avatarUrl: string;
+}
+
 export interface Card {
-  id: string;
-  title: string;
-  description: string;
-  columnId?: string;
-  color?: string;
-  tags?: Tag[];
+    id: string;
+    title: string;
+    description: string;
+    color: string;
+    columnId: string;
+    tags: Tag[];
+    creator?: CardCreator | null;
 }
 
 // В объект api добавляем новые методы:

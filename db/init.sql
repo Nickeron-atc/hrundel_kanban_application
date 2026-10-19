@@ -59,6 +59,28 @@ CREATE TABLE IF NOT EXISTS columns
 ) ON DELETE CASCADE
     );
 
+-- CREATE TABLE IF NOT EXISTS cards
+-- (
+--     id
+--     SERIAL
+--     PRIMARY
+--     KEY,
+--     title
+--     VARCHAR
+-- (
+--     120
+-- ) NOT NULL,
+--     description TEXT,
+--     column_id INTEGER REFERENCES columns
+-- (
+--     id
+-- ) ON DELETE CASCADE,
+--     color VARCHAR
+-- (
+--     7
+-- )
+--     );
+
 CREATE TABLE IF NOT EXISTS cards
 (
     id
@@ -78,8 +100,16 @@ CREATE TABLE IF NOT EXISTS cards
     color VARCHAR
 (
     7
-)
-    );
+),
+    creator_id INTEGER REFERENCES users
+(
+    id
+) ON
+    DELETE
+    SET
+    NULL
+);
+
 
 CREATE TABLE IF NOT EXISTS tags
 (

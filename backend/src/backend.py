@@ -26,14 +26,37 @@ def serialize_tag(tag):
 #         "tags": [serialize_tag(t) for t in card.tags],
 #     }
 
+# def serialize_card(card):
+#     return {
+#         "id": str(card.id),
+#         "title": card.title,
+#         "description": card.description or "",
+#         "color": card.color or "",
+#         "columnId": str(card.column_id),
+#         "tags": [serialize_tag(t) for t in card.tags],
+#     }
+
 def serialize_card(card):
+    creator_data = None
+    if card.creator:
+        avatar_url = ""
+        if card.creator.avatar_data:
+            import base64
+            b64 = base64.b64encode(card.creator.avatar_data).decode('utf-8')
+            avatar_url = f"data:{card.creator.avatar_mime_type or 'image/png'};base64,{b64}"
+        creator_data = {
+            "name": card.creator.full_name or card.creator.login,
+            "avatarUrl": avatar_url
+        }
+    
     return {
-        "id": str(card.id),
+        "id": card.id,
         "title": card.title,
-        "description": card.description or "",
-        "color": card.color or "",
-        "columnId": str(card.column_id),
-        "tags": [serialize_tag(t) for t in card.tags],
+        "description": card.description,
+        "color": card.color,
+        "columnId": card.column_id,
+        "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in card.tags],
+        "creator": creator_data
     }
 
 
@@ -268,6 +291,31 @@ def create_app():
     #         "data": {"card": card_data}
     #     }), 201
 
+    # @app.route("/api/boards/<int:board_id>/columns/<int:column_id>/cards", methods=["POST"])
+    # @jwt_required
+    # def create_card(board_id, column_id):
+    #     if not user_owns_board(g.current_user.id, board_id):
+    #         return err("Доска не найдена или нет прав", 404)
+    #     col = Column.query.filter_by(id=column_id, board_id=board_id).first()
+    #     if not col:
+    #         return err("Колонка не принадлежит этой доске", 400)
+    #     body = request.get_json(silent=True) or {}
+    #     title = body.get("title", "").strip()
+    #     if not title:
+    #         return err("Название карточки обязательно")
+    #     card = Card(
+    #         title=title,
+    #         description=body.get("description", ""),
+    #         color=body.get("color"),
+    #         column_id=column_id,
+    #     )
+    #     db.session.add(card)
+    #     db.session.commit()
+    #     return jsonify({
+    #         "status": "ok",
+    #         "data": {"card": serialize_card(card)},
+    #     }), 201
+
     @app.route("/api/boards/<int:board_id>/columns/<int:column_id>/cards", methods=["POST"])
     @jwt_required
     def create_card(board_id, column_id):
@@ -285,6 +333,7 @@ def create_app():
             description=body.get("description", ""),
             color=body.get("color"),
             column_id=column_id,
+            creator_id=g.current_user.id,
         )
         db.session.add(card)
         db.session.commit()
@@ -292,6 +341,7 @@ def create_app():
             "status": "ok",
             "data": {"card": serialize_card(card)},
         }), 201
+
 
     @app.route("/api/boards/<int:board_id>/cards/<int:card_id>", methods=["PATCH"])
     @jwt_required
