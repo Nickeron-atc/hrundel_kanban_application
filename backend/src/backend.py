@@ -478,6 +478,10 @@ def create_app():
 
     return app
 
+    @app.route("/api/auth/logout", methods=["POST"])
+    def logout():
+        return jsonify({"status": "ok", "data": {}}), 200
+
 
 if __name__ == "__main__":
     app = create_app()

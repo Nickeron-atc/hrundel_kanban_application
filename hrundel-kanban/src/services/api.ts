@@ -59,7 +59,7 @@ async function request<T>(
     
     // Используем Headers вместо простого объекта
     const headers = new Headers(options?.headers);
-    if (!headers.has("Content-Type")) {
+    if (!headers.has("Content-Type") && !(options?.body instanceof FormData)) {
       headers.set("Content-Type", "application/json");
     }
     if (token) {
