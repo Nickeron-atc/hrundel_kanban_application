@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify, g, send_file
+from flask import send_from_directory
+import os
 from werkzeug.security import check_password_hash
 from io import BytesIO
 from config import Config
@@ -106,6 +108,13 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_spa(path):
+        if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        return send_from_directory(app.static_folder, 'index.html')
+
     @app.route("/api/register", methods=["POST"])
     def register():
         body = request.get_json(silent=True) or {}
@@ -149,14 +158,14 @@ def create_app():
             "data": {"token": token, "user": user.to_dict()},
         })
 
-    @app.route("/api/boards", methods=["GET"])
-    @jwt_required
-    def get_boards():
-        boards = Board.query.filter_by(user_id=g.current_user.id).all()
-        return jsonify({
-            "status": "ok",
-            "data": {"boards": [serialize_board(b) for b in boards]},
-        })
+    # @app.route("/api/boards", methods=["GET"])
+    # @jwt_required
+    # def get_boards():
+    #     boards = Board.query.filter_by(user_id=g.current_user.id).all()
+    #     return jsonify({
+    #         "status": "ok",
+    #         "data": {"boards": [serialize_board(b) for b in boards]},
+    #     })
 
     @app.route("/api/boards", methods=["POST"])
     @jwt_required

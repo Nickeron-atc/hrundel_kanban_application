@@ -18,8 +18,6 @@ import { useBoards } from "../../../contexts/BoardContext";
 import { api, auth } from "../../../services/api";
 import { useQueryClient } from "@tanstack/react-query";
 
-const queryClient = useQueryClient();
-
 interface UserProfileModalProps {
     open: boolean;
     onClose: () => void;
@@ -30,6 +28,8 @@ export default function UserProfileModal({ open, onClose }: UserProfileModalProp
     // const [login] = useState("hrundel_login");
     // const [name, setName] = useState("Хрюндель Моисеевич");
     // const avatarUrl = moisey; // <-- Исправлена опечатка с ");"
+
+    const queryClient = useQueryClient();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [login, setLogin] = useState("");
