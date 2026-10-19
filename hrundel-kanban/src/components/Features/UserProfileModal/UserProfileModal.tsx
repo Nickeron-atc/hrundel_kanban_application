@@ -37,7 +37,7 @@ export default function UserProfileModal({ open, onClose }: UserProfileModalProp
     const [avatarVersion, setAvatarVersion] = useState(0);
     const [uploading, setUploading] = useState(false);
     const [saving, setSaving] = useState(false);
-    const { boards } = useBoards();
+    const { boards, reloadUser, bumpAvatarVersion } = useBoards();
 
     // const [originalName] = useState("Хрюндель Моисеевич");
     // const hasChanges = name !== originalName;
@@ -95,7 +95,9 @@ export default function UserProfileModal({ open, onClose }: UserProfileModalProp
         const res = await api.uploadAvatar(String(userId), file);
         setUploading(false);
         if (res.status === "ok") {
-        setAvatarUrl(`/api/users/${userId}/avatar?v=${Date.now()}`);
+            setAvatarUrl(`/api/users/${userId}/avatar?v=${Date.now()}`);
+            await reloadUser();
+            bumpAvatarVersion();
         }
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
@@ -107,7 +109,9 @@ export default function UserProfileModal({ open, onClose }: UserProfileModalProp
         const userId = JSON.parse(atob(payload)).user_id;
         const res = await api.deleteAvatar(String(userId));
         if (res.status === "ok") {
-        setAvatarUrl("");
+            setAvatarUrl("");
+            await reloadUser();
+            bumpAvatarVersion();
         }
     };
 

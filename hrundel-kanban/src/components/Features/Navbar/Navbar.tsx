@@ -20,7 +20,7 @@ export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarP
   const location = useLocation();
   const loggedIn = auth.isLoggedIn();
   const isOnWorkSession = location.pathname === "/worksession";
-  const { currentUser } = useBoards();
+  const { currentUser, avatarVersion } = useBoards();
 
   const handleLogout = async () => {
     await api.logout();
@@ -70,13 +70,12 @@ export default function Navbar({ currentBoardTitle, onOpenBoardsModal }: NavbarP
                     onClick={() => setProfileModalOpen(true)}
                     className={styles.userContainer}
                 >
-                  {/* <-- Заменяем img и span на переиспользуемый компонент */}
                   <UserAvatar
-                    src={currentUser?.has_avatar ? `/api/users/${currentUser.id}/avatar` : ""}
-                    name={currentUser?.full_name || currentUser?.login || ""}
-                    size="md"
-                    showName={true}
-                    />
+                      src={currentUser?.has_avatar ? `/api/users/${currentUser.id}/avatar?v=${avatarVersion}` : ""}
+                      name={currentUser?.full_name || currentUser?.login || ""}
+                      size="md"
+                      showName={true}
+                  />
                 </button>
             ) : (
                 <div></div>

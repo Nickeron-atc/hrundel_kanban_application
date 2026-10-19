@@ -12,6 +12,8 @@ interface BoardContextType {
     reloadBoards: () => Promise<void>;
     currentUser: User | null;
     reloadUser: () => Promise<void>;
+    avatarVersion: number;
+    bumpAvatarVersion: () => void;
 }
 
 const BoardContext = createContext<BoardContextType | null>(null);
@@ -44,6 +46,8 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [avatarVersion, setAvatarVersion] = useState(0);
+    const bumpAvatarVersion = useCallback(() => setAvatarVersion(v => v + 1), []);
 
     const reloadUser = useCallback(async () => {
     const res = await api.getMe();
@@ -64,17 +68,19 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     return (
         <BoardContext.Provider
             value={{
-            boards,
-            currentBoardId,
-            setCurrentBoardId,
-            isBoardsModalOpen,
-            openBoardsModal: () => setIsBoardsModalOpen(true),
-            closeBoardsModal: () => setIsBoardsModalOpen(false),
-            reloadBoards,
-            currentUser,
-            reloadUser,
+                boards,
+                currentBoardId,
+                setCurrentBoardId,
+                isBoardsModalOpen,
+                openBoardsModal: () => setIsBoardsModalOpen(true),
+                closeBoardsModal: () => setIsBoardsModalOpen(false),
+                reloadBoards,
+                currentUser,
+                reloadUser,
+                avatarVersion,
+                bumpAvatarVersion,
             }}
-            >
+        >
             {children}
         </BoardContext.Provider>
     );
