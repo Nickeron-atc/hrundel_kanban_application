@@ -20,7 +20,8 @@ export default function KanbanCard({ boardId, card, onDragStart, draggingId, onD
     if (!boardId) return;
     try {
       const res = await api.updateCard(boardId, card.id, updates);
-      if (res.status === "ok" && onUpdateCard) {
+      // if (res.status === "ok" && onUpdateCard) {
+      if (res.status === "ok") {
         onUpdateCard(card.id, res.data.card);
       }
     } catch (err) {

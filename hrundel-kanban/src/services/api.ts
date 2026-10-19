@@ -176,15 +176,28 @@ export const api = {
   },
 
   /** POST /api/boards/:boardId/columns/:columnId/cards — { title, description } → { card } */
+  // createCard(
+  //     boardId: string,
+  //     columnId: string,
+  //     title: string,
+  //     description: string,
+  // ): Promise<ApiResponse<{ card: Card }>> {
+  //   return request(`/boards/${boardId}/columns/${columnId}/cards`, {
+  //     method: "POST",
+  //     body: JSON.stringify({ title, description }),
+  //   });
+  // },
+
   createCard(
-      boardId: string,
-      columnId: string,
-      title: string,
-      description: string,
+    boardId: string,
+    columnId: string,
+    title: string,
+    description: string,
+    color?: string,
   ): Promise<ApiResponse<{ card: Card }>> {
     return request(`/boards/${boardId}/columns/${columnId}/cards`, {
       method: "POST",
-      body: JSON.stringify({ title, description }),
+      body: JSON.stringify({ title, description, color }),
     });
   },
 

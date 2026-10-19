@@ -9,23 +9,34 @@ import Button from "../../UI/Button/Button";
 import styles from "./KanbanBoard.module.css";
 import cardMoveSound from '../../../assets/sounds/card-move.mp3';
 
+// interface KanbanBoardProps {
+//     board: Board;
+//     onAddColumn?: (title: string) => void | Promise<void>;
+//     onDeleteColumn?: (columnId: string) => void | Promise<void>;
+//     onAddCard?: (columnId: string, title: string, description: string) => void | Promise<void>;
+//     onDeleteCard?: (cardId: string) => void | Promise<void>;
+//     onMoveCard?: (cardId: string, targetColumnId: string) => void | Promise<void>;
+// }
+
 interface KanbanBoardProps {
-    board: Board;
-    onAddColumn?: (title: string) => void | Promise<void>;
-    onDeleteColumn?: (columnId: string) => void | Promise<void>;
-    onAddCard?: (columnId: string, title: string, description: string) => void | Promise<void>;
-    onDeleteCard?: (cardId: string) => void | Promise<void>;
-    onMoveCard?: (cardId: string, targetColumnId: string) => void | Promise<void>;
+  board: Board;
+  onAddColumn?: (title: string) => void | Promise<void>;
+  onDeleteColumn?: (columnId: string) => void | Promise<void>;
+  onAddCard?: (columnId: string, title: string, description: string) => void | Promise<void>;
+  onDeleteCard?: (cardId: string) => void | Promise<void>;
+  onMoveCard?: (cardId: string, targetColumnId: string) => void | Promise<void>;
+  onUpdateCard?: (cardId: string, updates: Partial<Card>) => Promise<void>;
 }
 
 export default function KanbanBoard({
-                                        board,
-                                        onAddColumn,
-                                        onDeleteColumn,
-                                        onAddCard,
-                                        onDeleteCard,
-                                        onMoveCard,
-                                    }: KanbanBoardProps) {
+  board,
+  onAddColumn,
+  onDeleteColumn,
+  onAddCard,
+  onDeleteCard,
+  onMoveCard,
+  onUpdateCard,
+}: KanbanBoardProps) {
     const cardMoveAudioRef = useRef<HTMLAudioElement | null>(null);
 
     useEffect(() => {
@@ -41,6 +52,7 @@ export default function KanbanBoard({
     const [addColumnId, setAddColumnId] = useState<string | null>(null);
     const [newTitle, setNewTitle] = useState("");
     const [newDescription, setNewDescription] = useState("");
+    const [newColor, setNewColor] = useState("");
     const [addError, setAddError] = useState("");
     const [isAddingColumn, setIsAddingColumn] = useState(false);
     const [newColumnTitle, setNewColumnTitle] = useState("");
@@ -102,15 +114,28 @@ export default function KanbanBoard({
         setAddModal(true);
     }, []);
 
+    // const handleAddCard = useCallback(async () => {
+    //     if (!newTitle.trim()) {
+    //         setAddError("Введите название задачи");
+    //         return;
+    //     }
+    //     if (!addColumnId || !onAddCard) return;
+    //     await onAddCard(addColumnId, newTitle.trim(), newDescription.trim());
+    //     setAddModal(false);
+    // }, [newTitle, newDescription, addColumnId, onAddCard]);
+
     const handleAddCard = useCallback(async () => {
-        if (!newTitle.trim()) {
-            setAddError("Введите название задачи");
-            return;
-        }
-        if (!addColumnId || !onAddCard) return;
-        await onAddCard(addColumnId, newTitle.trim(), newDescription.trim());
-        setAddModal(false);
-    }, [newTitle, newDescription, addColumnId, onAddCard]);
+    if (!newTitle.trim()) {
+        setAddError("Введите название задачи");
+        return;
+    }
+    if (!addColumnId || !onAddCard) return;
+    await onAddCard(addColumnId, newTitle.trim(), newDescription.trim(), newColor);
+    setNewTitle("");
+    setNewDescription("");
+    setNewColor("");
+    setAddModal(false);
+    }, [newTitle, newDescription, newColor, addColumnId, onAddCard]);
 
     const handleAddColumnClick = async () => {
         if (!newColumnTitle.trim() || !onAddColumn) return;
@@ -152,6 +177,7 @@ export default function KanbanBoard({
                         onAddCard={openAddModal}
                         onDeleteColumn={onDeleteColumn}
                         onDeleteCard={onDeleteCard}
+                        onUpdateCard={onUpdateCard}
                     />
                 ))}
                 <div className={styles.addColumnWrapper}>
@@ -220,7 +246,20 @@ export default function KanbanBoard({
                         value={newDescription}
                         onChange={(e) => setNewDescription(e.target.value)}
                     />
+
+                    {/* <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                        <label style={{ fontSize: "13px", fontWeight: 500, color: "var(--color-text-muted)" }}>
+                        Цвет (опционально)
+                        </label>
+                        <input
+                        type="color"
+                        value={newColor || "#ffffff"}
+                        onChange={(e) => setNewColor(e.target.value)}
+                        style={{ width: "60px", height: "36px", border: "none", cursor: "pointer" }}
+                        />
+                    </div> */}
                 </div>
+                
             </AppModal>
         </div>
     );

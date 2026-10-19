@@ -44,31 +44,33 @@ import styles from "./KanbanColumn.module.css";
 // }: KanbanColumnProps) {
 
 interface KanbanColumnProps {
-column: Column;
-boardId: string;
-draggingId: string | null;
-dragOverColumnId: string | null;
-onDragStart: (e: React.DragEvent<HTMLDivElement>, cardId: string) => void;
-onDragOver: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
-onDrop: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
-onDragLeave: () => void;
-onAddCard: (columnId: string) => void;
-onDeleteColumn?: (columnId: string) => void;
-onDeleteCard?: (cardId: string) => void;
+  column: Column;
+  boardId: string;
+  draggingId: string | null;
+  dragOverColumnId: string | null;
+  onDragStart: (e: React.DragEvent<HTMLDivElement>, cardId: string) => void;
+  onDragOver: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
+  onDrop: (e: React.DragEvent<HTMLDivElement>, columnId: string) => void;
+  onDragLeave: () => void;
+  onAddCard: (columnId: string) => void;
+  onDeleteColumn?: (columnId: string) => void;
+  onDeleteCard?: (cardId: string) => void;
+  onUpdateCard?: (cardId: string, updates: Partial<Card>) => Promise<void>;
 }
 
 export default function KanbanColumn({
-column,
-boardId,
-draggingId,
-dragOverColumnId,
-onDragStart,
-onDragOver,
-onDrop,
-onDragLeave,
-onAddCard,
-onDeleteColumn,
-onDeleteCard
+  column,
+  boardId,
+  draggingId,
+  dragOverColumnId,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragLeave,
+  onAddCard,
+  onDeleteColumn,
+  onDeleteCard,
+  onUpdateCard
 }: KanbanColumnProps) {
   const isDragOver = dragOverColumnId === column.id;
 
@@ -113,16 +115,17 @@ onDeleteCard
 
       <div className={styles.cards}>
       {column.cards.map((card) => (
-      <KanbanCard
-      key={card.id}
-      boardId={boardId}
-      card={card}
-      onDragStart={onDragStart}
-      draggingId={draggingId}
-      onDeleteCard={onDeleteCard}
-      />
+        <KanbanCard
+          key={card.id}
+          boardId={boardId}
+          card={card}
+          onDragStart={onDragStart}
+          draggingId={draggingId}
+          onDeleteCard={onDeleteCard}
+          onUpdateCard={onUpdateCard}
+        />
       ))}
-      </div>
+    </div>
 
       <button
         className={styles.addBtn}

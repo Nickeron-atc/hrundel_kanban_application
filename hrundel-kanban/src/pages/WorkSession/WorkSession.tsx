@@ -75,6 +75,15 @@ export default function WorkSession() {
     setDeleteCardDialogOpen(true);
   };
 
+  // const handleDeleteCardConfirm = async () => {
+  //   if (!cardIdToDelete || !currentBoardId) return;
+  //   const res = await api.deleteCard(currentBoardId, cardIdToDelete);
+  //   if (res.status === "ok") {
+  //     await reloadBoards();
+  //   }
+  //   setCardIdToDelete(null);
+  // };
+
   const handleDeleteCardConfirm = async () => {
     if (!cardIdToDelete || !currentBoardId) return;
     const res = await api.deleteCard(currentBoardId, cardIdToDelete);
@@ -84,21 +93,39 @@ export default function WorkSession() {
     setCardIdToDelete(null);
   };
 
+  const handleUpdateCard = async (cardId: string, updates: Partial<Card>) => {
+    await reloadBoards();
+  };
+
   return (
       <main className={styles.workSessionPage}>
         {currentBoard ? (
+            // <KanbanBoard
+            //     board={currentBoard}
+            //     onAddColumn={(title) => handleAddColumn(currentBoard.id, title)}
+            //     onDeleteColumn={handleDeleteColumnClick}
+            //     onAddCard={(columnId, title, description) =>
+            //         handleAddCard(currentBoard.id, columnId, title, description)
+            //     }
+            //     onMoveCard={(cardId, targetColumnId) =>
+            //         handleMoveCard(currentBoard.id, cardId, targetColumnId)
+            //     }
+            //     onDeleteCard={handleDeleteCardClick}
+            // />
+
             <KanbanBoard
-                board={currentBoard}
-                onAddColumn={(title) => handleAddColumn(currentBoard.id, title)}
-                onDeleteColumn={handleDeleteColumnClick}
-                onAddCard={(columnId, title, description) =>
-                    handleAddCard(currentBoard.id, columnId, title, description)
-                }
-                onMoveCard={(cardId, targetColumnId) =>
-                    handleMoveCard(currentBoard.id, cardId, targetColumnId)
-                }
-                onDeleteCard={handleDeleteCardClick}
-            />
+              board={currentBoard}
+              onAddColumn={(title) => handleAddColumn(currentBoard.id, title)}
+              onDeleteColumn={handleDeleteColumnClick}
+              onAddCard={(columnId, title, description) =>
+                handleAddCard(currentBoard.id, columnId, title, description)
+              }
+              onMoveCard={(cardId, targetColumnId) =>
+                handleMoveCard(currentBoard.id, cardId, targetColumnId)
+              }
+              onDeleteCard={handleDeleteCardClick}
+              onUpdateCard={handleUpdateCard}
+          />
         ) : (
             <div className={styles.noBoard}>Нет доступных досок</div>
         )}
