@@ -650,8 +650,6 @@ def create_app():
             "data": {"user": g.current_user.to_dict()},
         })
 
-    return app
-
     @app.route("/api/auth/logout", methods=["POST"])
     def logout():
         return jsonify({"status": "ok", "data": {}}), 200
