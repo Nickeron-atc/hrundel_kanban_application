@@ -5,6 +5,8 @@ from config import Config
 from extensions import db, cors
 from models import User, Board, Column, Card, Tag, CardTag
 from auth import generate_token, jwt_required
+import jwt
+from functools import wraps
 
 
 def err(message, code=400):
@@ -54,6 +56,17 @@ def serialize_board(board):
 def user_owns_board(user_id, board_id):
     return Board.query.filter_by(id=board_id, user_id=user_id).first() is not None
 
+def get_current_user_id():
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return None
+    
+    token = auth_header[7:]
+    try:
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        return payload.get('user_id')
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+        return None
 
 def create_app():
     app = Flask(__name__)
@@ -145,59 +158,128 @@ def create_app():
         db.session.commit()
         return jsonify({"status": "ok"})
 
+    # @app.route("/api/boards/<int:board_id>/columns", methods=["POST"])
+    # @jwt_required
+    # def create_column(board_id):
+    #     if not user_owns_board(g.current_user.id, board_id):
+    #         return err("Доска не найдена или нет прав", 404)
+
+    #     body = request.get_json(silent=True) or {}
+    #     title = body.get("title", "").strip()
+    #     if not title:
+    #         return err("Название колонки обязательно")
+
+    #     col = Column(title=title, board_id=board_id)
+    #     db.session.add(col)
+    #     db.session.commit()
+
+    #     board = Board.query.get(board_id)
+    #     return jsonify({
+    #         "status": "ok",
+    #         "data": {"board": serialize_board(board)},
+    #     }), 201
+
     @app.route("/api/boards/<int:board_id>/columns", methods=["POST"])
     @jwt_required
     def create_column(board_id):
         if not user_owns_board(g.current_user.id, board_id):
             return err("Доска не найдена или нет прав", 404)
-
         body = request.get_json(silent=True) or {}
         title = body.get("title", "").strip()
         if not title:
             return err("Название колонки обязательно")
-
         col = Column(title=title, board_id=board_id)
         db.session.add(col)
         db.session.commit()
-
-        board = Board.query.get(board_id)
         return jsonify({
             "status": "ok",
-            "data": {"board": serialize_board(board)},
+            "data": {"column": serialize_column(col)},
         }), 201
+
+    # @app.route("/api/columns/<int:column_id>", methods=["DELETE"])
+    # @jwt_required
+    # def delete_column(column_id):
+    #     col = Column.query.get(column_id)
+    #     if not col or not user_owns_board(g.current_user.id, col.board_id):
+    #         return err("Колонка не найдена", 404)
+
+    #     board_id = col.board_id
+    #     db.session.delete(col)
+    #     db.session.commit()
+
+    #     board = Board.query.get(board_id)
+    #     return jsonify({
+    #         "status": "ok",
+    #         "data": {"board": serialize_board(board)},
+    #     })
 
     @app.route("/api/columns/<int:column_id>", methods=["DELETE"])
     @jwt_required
     def delete_column(column_id):
         col = Column.query.get(column_id)
-        if not col or not user_owns_board(g.current_user.id, col.board_id):
+        if not col:
             return err("Колонка не найдена", 404)
-
-        board_id = col.board_id
+        if not user_owns_board(g.current_user.id, col.board_id):
+            return err("Нет прав", 403)
         db.session.delete(col)
         db.session.commit()
-
-        board = Board.query.get(board_id)
         return jsonify({
             "status": "ok",
-            "data": {"board": serialize_board(board)},
+            "data": {"deleted": str(column_id)},
         })
+
+    # @app.route("/api/boards/<int:board_id>/columns/<int:column_id>/cards", methods=["POST"])
+    # @jwt_required
+    # def create_card(board_id, column_id):
+    #     if not user_owns_board(g.current_user.id, board_id):
+    #         return err("Доска не найдена или нет прав", 404)
+    #     col = Column.query.filter_by(id=column_id, board_id=board_id).first()
+    #     if not col:
+    #         return err("Колонка не принадлежит этой доске", 400)
+
+    #     data = request.get_json() or {}
+    #     title = data.get("title", "").strip()
+    #     description = data.get("description", "").strip()
+    #     color = data.get("color", "")
+    #     if not title:
+    #         return err("Название карточки не может быть пустым", 400)
+
+    #     row = execute(
+    #         """
+    #         INSERT INTO cards (column_id, title, description, color)
+    #         VALUES (%s, %s, %s, %s)
+    #         RETURNING id, column_id, title, description, color;
+    #         """,
+    #         (column_id, title, description, color),
+    #         returning=True,
+    #     )
+        
+    #     card_data = {
+    #         "id": str(row["id"]),
+    #         "title": row["title"],
+    #         "description": row["description"] or "",
+    #         "columnId": str(row["column_id"]),
+    #         "color": row["color"] or "",
+    #         "tags": []
+    #     }
+        
+    #     return jsonify({
+    #         "status": "ok",
+    #         "data": {"card": card_data}
+    #     }), 201
 
     @app.route("/api/boards/<int:board_id>/columns/<int:column_id>/cards", methods=["POST"])
     @jwt_required
     def create_card(board_id, column_id):
         if not user_owns_board(g.current_user.id, board_id):
             return err("Доска не найдена или нет прав", 404)
-
         col = Column.query.filter_by(id=column_id, board_id=board_id).first()
         if not col:
             return err("Колонка не принадлежит этой доске", 400)
-
         body = request.get_json(silent=True) or {}
         title = body.get("title", "").strip()
         if not title:
             return err("Название карточки обязательно")
-
         card = Card(
             title=title,
             description=body.get("description", ""),
@@ -206,7 +288,6 @@ def create_app():
         )
         db.session.add(card)
         db.session.commit()
-
         return jsonify({
             "status": "ok",
             "data": {"card": serialize_card(card)},
@@ -243,16 +324,29 @@ def create_app():
             "data": {"card": serialize_card(card)},
         })
 
+    # @app.route("/api/cards/<int:card_id>", methods=["DELETE"])
+    # @jwt_required
+    # def delete_card(card_id):
+    #     card = Card.query.get(card_id)
+    #     if not card or not user_owns_board(g.current_user.id, card.column.board_id):
+    #         return err("Карточка не найдена", 404)
+
+    #     db.session.delete(card)
+    #     db.session.commit()
+    #     return jsonify({"status": "ok"})
+
     @app.route("/api/cards/<int:card_id>", methods=["DELETE"])
     @jwt_required
     def delete_card(card_id):
         card = Card.query.get(card_id)
         if not card or not user_owns_board(g.current_user.id, card.column.board_id):
             return err("Карточка не найдена", 404)
-
         db.session.delete(card)
         db.session.commit()
-        return jsonify({"status": "ok"})
+        return jsonify({
+            "status": "ok",
+            "data": {"deleted": str(card_id)},
+        })
 
     # @app.route("/api/cards/move", methods=["POST"])
     # @jwt_required
@@ -314,6 +408,40 @@ def create_app():
         # }), 200
 
 
+    # @app.route("/api/cards/move", methods=["POST"])
+    # @jwt_required
+    # def move_card():
+    #     body = request.get_json(silent=True) or {}
+    #     card_id = body.get("card_id")
+    #     target_column_id = body.get("target_column_id")
+    #     board_id = body.get("board_id")
+
+    #     if not card_id or not target_column_id or not board_id:
+    #         return err("Необходимы card_id, target_column_id и board_id")
+
+    #     card = Card.query.get(card_id)
+    #     target_col = Column.query.get(target_column_id)
+
+    #     if not card or not target_col:
+    #         return err("Карточка или колонка не найдена", 404)
+
+    #     if not user_owns_board(g.current_user.id, target_col.board_id):
+    #         return err("Нет прав", 403)
+
+    #     card.column_id = target_column_id
+    #     db.session.commit()
+
+    #     board = Board.query.get(target_col.board_id)
+
+    #     return jsonify({
+    #         "status": "ok",
+    #         "data": {
+    #             "card": serialize_card(card),
+    #             "boardId": str(board.id),
+    #         },
+    #     }), 200
+
+
     @app.route("/api/cards/move", methods=["POST"])
     @jwt_required
     def move_card():
@@ -321,31 +449,23 @@ def create_app():
         card_id = body.get("card_id")
         target_column_id = body.get("target_column_id")
         board_id = body.get("board_id")
-
         if not card_id or not target_column_id or not board_id:
             return err("Необходимы card_id, target_column_id и board_id")
-
         card = Card.query.get(card_id)
         target_col = Column.query.get(target_column_id)
-
         if not card or not target_col:
             return err("Карточка или колонка не найдена", 404)
-
         if not user_owns_board(g.current_user.id, target_col.board_id):
             return err("Нет прав", 403)
-
         card.column_id = target_column_id
         db.session.commit()
-
-        board = Board.query.get(target_col.board_id)
-
         return jsonify({
             "status": "ok",
             "data": {
-                "card": serialize_card(card),
-                "boardId": str(board.id),
+                "cardId": str(card_id),
+                "targetColumnId": str(target_column_id),
             },
-        }), 200
+        })
 
     @app.route("/api/boards/<int:board_id>/tags", methods=["GET"])
     @jwt_required
