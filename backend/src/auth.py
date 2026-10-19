@@ -27,7 +27,7 @@ def jwt_required(f):
             payload = jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
             current_user = User.query.get(payload["user_id"])
             if not current_user:
-                raise ValueError("Пользователь не найден")
+                return jsonify({"status": "error", "message": "Пользователь не найден"}), 401
             g.current_user = current_user
         except jwt.ExpiredSignatureError:
             return jsonify({"status": "error", "message": "Срок действия токена истек"}), 401

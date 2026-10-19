@@ -101,11 +101,17 @@ async function request<T>(
     }
 
     if (!res.ok) {
-      const msg =
-        typeof json === "object" && json !== null && "message" in json
-          ? String((json as { message: unknown }).message)
-          : `HTTP ${res.status}`;
-      return { status: "error", data: null as T, message: msg };
+        const msg =
+            typeof json === "object" && json !== null && "message" in json
+                ? String((json as { message: unknown }).message)
+                : `HTTP ${res.status}`;
+        if (res.status === 401) {
+            auth.clearToken();
+            if (window.location.pathname !== "/login") {
+                window.location.href = "/login";
+            }
+        }
+        return { status: "error", data: null as T, message: msg };
     }
 
     // Если сервер уже вернул { status, data } — пробрасываем напрямую
@@ -262,27 +268,27 @@ export const api = {
     });
   },
 
-    updateCard(
+  updateCard(
     boardId: string,
     cardId: string,
     updates: { title?: string; description?: string; color?: string; tags?: { id: string }[] }
-  ): Promise<ApiResponse<{ card: Card }>> {
-    const payload: Record<string, unknown> = {};
-    if (updates.title !== undefined) payload.title = updates.title;
-    if (updates.description !== undefined) payload.description = updates.description;
-    if (updates.color !== undefined) payload.color = updates.color;
-    if (updates.tags !== undefined) {
-      payload.tagIds = updates.tags.map((t) => parseInt(t.id, 10));
-    }
-    return request(`/boards/${boardId}/cards/${cardId}`, {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    });
+    ): Promise<ApiResponse<{ card: Card }>> {
+      const payload: Record<string, unknown> = {};
+      if (updates.title !== undefined) payload.title = updates.title;
+      if (updates.description !== undefined) payload.description = updates.description;
+      if (updates.color !== undefined) payload.color = updates.color;
+      if (updates.tags !== undefined) {
+        payload.tagIds = updates.tags.map((t) => parseInt(t.id, 10));
+      }
+      return request(`/boards/${boardId}/cards/${cardId}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      });
   },
 
   getTags(boardId: string): Promise<ApiResponse<{ tags: Tag[] }>> {
-return request(`/boards/${boardId}/tags`);
-},
+    return request(`/boards/${boardId}/tags`);
+  },
 
   createTag(boardId: string, name: string, color: string): Promise<ApiResponse<{ tag: Tag }>> {
     return request(`/boards/${boardId}/tags`, {
@@ -351,7 +357,18 @@ return request(`/boards/${boardId}/tags`);
     return request(`/columns/${columnId}`, {
       method: "DELETE",
     });
-},
+  
+  },
+
+  getShareLink(boardId: string): Promise<ApiResponse<{ share_url: string; share_token: string }>> {
+    return request(`/boards/${boardId}/share`);
+  },
+  joinBoard(shareToken: string): Promise<ApiResponse<{ board: Board }>> {
+      return request("/boards/join", {
+          method: "POST",
+          body: JSON.stringify({ share_token: shareToken }),
+      });
+  },
 };
 
 export const auth = {

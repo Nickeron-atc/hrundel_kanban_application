@@ -51,13 +51,36 @@ export default function CreateBoardModal({
         handleClose();
     };
 
-    const handleJoin = () => {
-        // TODO: реализовать присоединение по ссылке
+    const handleJoin = async () => {
         if (!link.trim()) {
             setError("Вставьте ссылку на доску");
             return;
         }
-        setError("Функция присоединения по ссылке пока в разработке");
+        
+        setLoading(true);
+        setError("");
+        
+        try {
+            const shareToken = link.split("/join/")[1];
+            if (!shareToken) {
+                setError("Невалидная ссылка");
+                setLoading(false);
+                return;
+            }
+            
+            const res = await api.joinBoard(shareToken);
+            setLoading(false);
+            
+            if (res.status === "ok") {
+                handleClose();
+                window.location.reload();
+            } else {
+                setError(res.message || "Не удалось присоединиться к доске");
+            }
+        } catch (err) {
+            setLoading(false);
+            setError("Ошибка при присоединении к доске");
+        }
     };
 
     return (

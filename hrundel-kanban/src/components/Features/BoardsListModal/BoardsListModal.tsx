@@ -7,6 +7,7 @@ import { ConfirmDialog } from "../../UI/ConfirmDialog/ConfirmDialog";
 import CreateBoardModal from "../CreateBoardModal/CreateBoardModal";
 import Button from "../../UI/Button/Button";
 import { useBoards } from "../../../contexts/BoardContext";
+import ShareBoardModal from "../ShareBoardModal/ShareBoardModal";
 
 interface BoardsListModalProps {
     open: boolean;
@@ -21,53 +22,37 @@ export default function BoardsListModal({
                                             onSelectBoard,
                                             currentBoardId,
                                         }: BoardsListModalProps) {
-    // const [boards, setBoards] = useState<Board[]>([]);
     const [loading, setLoading] = useState(false);
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [boardIdToDelete, setBoardIdToDelete] = useState<string | null>(null);
 
-    // const loadBoards = async () => {
-    //     setLoading(true);
-    //     const res = await api.getBoards();
-    //     if (res.status === "ok") {
-    //         setBoards(res.data.boards);
-    //     }
-    //     setLoading(false);
-    // };
 
     const { boards, reloadBoards, setCurrentBoardId } = useBoards();
 
-    // useEffect(() => {
-    //     if (open) {
-    //         loadBoards();
-    //     }
-    // }, [open]);
+    const [shareModalOpen, setShareModalOpen] = useState(false);
+    const [boardIdToShare, setBoardIdToShare] = useState<string | null>(null);
+    const [boardTitleToShare, setBoardTitleToShare] = useState("");
 
-    // Было: loadBoards();
-// Стало:
+    const handleShareClick = (boardId: string, boardTitle: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setBoardIdToShare(boardId);
+        setBoardTitleToShare(boardTitle);
+        setShareModalOpen(true);
+    };
+
+
     useEffect(() => {
         if (open) {
             reloadBoards();
         }
     }, [open, reloadBoards]);
 
-    // const handleCreateBoard = async (title: string) => {
-    //     const res = await api.createBoard(title);
-    //     if (res.status === "ok") {
-    //         await loadBoards();
-    //         setCreateModalOpen(false);
-    //         return { ok: true };
-    //     }
-    //     return { ok: false, message: res.message };
-    // };
-
     const handleCreateBoard = async (title: string) => {
         const res = await api.createBoard(title);
         if (res.status === "ok") {
-            await reloadBoards(); // Обновляем глобальный список досок
+            await reloadBoards();
 
-            // Автоматически выбираем только что созданную доску
             if (res.data?.board?.id) {
                 setCurrentBoardId(res.data.board.id);
             }
@@ -171,6 +156,33 @@ export default function BoardsListModal({
                                         Владелец: Вы
                                     </div>
                                 </div>
+
+                                <button
+                                    onClick={(e) => handleShareClick(board.id, board.title, e)}
+                                    style={{
+                                        padding: "6px 10px",
+                                        borderRadius: "var(--radius-sm)",
+                                        border: "none",
+                                        background: "transparent",
+                                        color: "var(--color-text-muted)",
+                                        cursor: "pointer",
+                                        fontSize: "16px",
+                                        transition: "all 0.15s",
+                                        marginRight: "4px",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = "rgba(255, 122, 0, 0.1)";
+                                        e.currentTarget.style.color = "var(--color-primary)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = "transparent";
+                                        e.currentTarget.style.color = "var(--color-text-muted)";
+                                    }}
+                                    title="Поделиться доской"
+                                >
+                                    🔗
+                                </button>
+
                                 <button
                                     onClick={(e) => handleDeleteClick(board.id, e)}
                                     style={{
@@ -215,6 +227,13 @@ export default function BoardsListModal({
                 confirmLabel="Удалить"
                 variant="danger"
                 onConfirm={handleDeleteConfirm}
+            />
+
+            <ShareBoardModal
+                open={shareModalOpen}
+                onClose={() => setShareModalOpen(false)}
+                boardId={boardIdToShare || ""}
+                boardTitle={boardTitleToShare}
             />
         </>
     );

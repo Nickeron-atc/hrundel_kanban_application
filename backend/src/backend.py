@@ -75,9 +75,14 @@ def serialize_board(board):
         "columns": [serialize_column(c) for c in board.columns],
     }
 
-
 def user_owns_board(user_id, board_id):
-    return Board.query.filter_by(id=board_id, user_id=user_id).first() is not None
+    board = Board.query.get(board_id)
+    if not board:
+        return False
+    if board.user_id == user_id:
+        return True
+    member = BoardMember.query.filter_by(board_id=board_id, user_id=user_id).first()
+    return member is not None
 
 def get_current_user_id():
     auth_header = request.headers.get('Authorization', '')
@@ -640,6 +645,77 @@ def create_app():
     @app.route("/api/auth/logout", methods=["POST"])
     def logout():
         return jsonify({"status": "ok", "data": {}}), 200
+
+
+    @app.route("/api/boards/<int:board_id>/share", methods=["GET"])
+    @jwt_required
+    def get_share_link(board_id):
+        if not user_owns_board(g.current_user.id, board_id):
+            return err("Доска не найдена или нет прав", 404)
+        
+        board = Board.query.get(board_id)
+        share_token = f"share_{board.id}_{board.user_id}"
+        share_url = f"{request.host_url}join/{share_token}"
+        
+        return jsonify({
+            "status": "ok",
+            "data": {"share_url": share_url, "share_token": share_token}
+        })
+
+    @app.route("/api/boards/join", methods=["POST"])
+    @jwt_required
+    def join_board():
+        body = request.get_json(silent=True) or {}
+        share_token = body.get("share_token", "").strip()
+        
+        if not share_token or not share_token.startswith("share_"):
+            return err("Невалидная ссылка", 400)
+        
+        parts = share_token.split("_")
+        if len(parts) != 3:
+            return err("Невалидная ссылка", 400)
+        
+        try:
+            board_id = int(parts[1])
+            owner_id = int(parts[2])
+        except ValueError:
+            return err("Невалидная ссылка", 400)
+        
+        board = Board.query.get(board_id)
+        if not board or board.user_id != owner_id:
+            return err("Доска не найдена", 404)
+        
+        if board.user_id == g.current_user.id:
+            return err("Вы уже являетесь владельцем этой доски", 400)
+        
+        existing = BoardMember.query.filter_by(board_id=board_id, user_id=g.current_user.id).first()
+        if existing:
+            return err("Вы уже присоединились к этой доске", 400)
+        
+        member = BoardMember(board_id=board_id, user_id=g.current_user.id, role="member")
+        db.session.add(member)
+        db.session.commit()
+        
+        return jsonify({
+            "status": "ok",
+            "data": {"board": serialize_board(board)}
+        })
+
+    @app.route("/api/boards", methods=["GET"])
+    @jwt_required
+    def get_boards():
+        owned_boards = Board.query.filter_by(user_id=g.current_user.id).all()
+        
+        member_board_ids = db.session.query(BoardMember.board_id).filter_by(user_id=g.current_user.id).all()
+        member_board_ids = [b[0] for b in member_board_ids]
+        shared_boards = Board.query.filter(Board.id.in_(member_board_ids)).all() if member_board_ids else []
+        
+        all_boards = owned_boards + shared_boards
+        
+        return jsonify({
+            "status": "ok",
+            "data": {"boards": [serialize_board(b) for b in all_boards]},
+        })
 
 
 if __name__ == "__main__":

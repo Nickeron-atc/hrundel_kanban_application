@@ -95,6 +95,16 @@ class User(db.Model):
         }
 
 
+class BoardMember(db.Model):
+    __tablename__ = "board_members"
+    id = db.Column(db.Integer, primary_key=True)
+    board_id = db.Column(db.Integer, db.ForeignKey("boards.id", ondelete="CASCADE"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default="member")
+    joined_at = db.Column(db.DateTime, default=db.func.now())
+    
+    __table_args__ = (db.UniqueConstraint('board_id', 'user_id', name='unique_board_member'),)
+
 class Board(db.Model):
     __tablename__ = "boards"
     id = db.Column(db.Integer, primary_key=True)
