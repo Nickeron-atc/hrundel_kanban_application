@@ -5,7 +5,8 @@ from werkzeug.security import check_password_hash
 from io import BytesIO
 from config import Config
 from extensions import db, cors
-from models import User, Board, Column, Card, Tag, CardTag
+# backend/src/backend.py
+from models import User, Board, Column, Card, Tag, CardTag, BoardMember
 from auth import generate_token, jwt_required
 import jwt
 from functools import wraps
@@ -714,17 +715,16 @@ def create_app():
     @jwt_required
     def get_boards():
         owned_boards = Board.query.filter_by(user_id=g.current_user.id).all()
-        
         member_board_ids = db.session.query(BoardMember.board_id).filter_by(user_id=g.current_user.id).all()
         member_board_ids = [b[0] for b in member_board_ids]
         shared_boards = Board.query.filter(Board.id.in_(member_board_ids)).all() if member_board_ids else []
-        
         all_boards = owned_boards + shared_boards
-        
         return jsonify({
             "status": "ok",
             "data": {"boards": [serialize_board(b) for b in all_boards]},
         })
+
+    return app
 
 
 if __name__ == "__main__":
