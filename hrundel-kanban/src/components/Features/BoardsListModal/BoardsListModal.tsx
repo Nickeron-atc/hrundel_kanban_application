@@ -84,11 +84,20 @@ export default function BoardsListModal({
         setDeleteDialogOpen(true);
     };
 
+    // const handleDeleteConfirm = async () => {
+    //     if (!boardIdToDelete) return;
+    //     const res = await api.deleteBoard(boardIdToDelete);
+    //     if (res.status === "ok") {
+    //         await loadBoards();
+    //         setBoardIdToDelete(null);
+    //     }
+    // };
+
     const handleDeleteConfirm = async () => {
         if (!boardIdToDelete) return;
-        const res = await api.deleteBoard(boardIdToDelete);
+            const res = await api.deleteBoard(boardIdToDelete);
         if (res.status === "ok") {
-            await loadBoards();
+            await reloadBoards();
             setBoardIdToDelete(null);
         }
     };
