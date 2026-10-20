@@ -1,5 +1,5 @@
 // src/components/UI/UserAvatar/UserAvatar.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./UserAvatar.module.css";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../../services/api";
@@ -35,6 +35,13 @@ export default function UserAvatar({
                                    }: UserAvatarProps) {
     const [imgError, setImgError] = useState(false);
     const initial = name.trim().charAt(0).toUpperCase() || "?";
+
+
+    useEffect(() => {
+            setImgError(false);
+        }, [src]);
+
+    
 
     return (
         <div className={`${styles.container} ${styles[size]} ${className}`}>

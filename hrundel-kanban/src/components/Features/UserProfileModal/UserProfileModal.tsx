@@ -89,22 +89,19 @@ export default function UserProfileModal({ open, onClose }: UserProfileModalProp
     const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        
         const token = auth.getToken();
         if (!token) return;
-        
         const payload = token.split(".")[1];
         const userId = JSON.parse(atob(payload)).user_id;
-        
         setUploading(true);
         const res = await api.uploadAvatar(String(userId), file);
         setUploading(false);
-        
         if (res.status === "ok") {
             queryClient.invalidateQueries({ queryKey: ["currentUser"] });
             bumpAvatarVersion();
+            await reloadUser();
+            setAvatarUrl(`/api/users/${userId}/avatar?v=${Date.now()}`);
         }
-        
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
