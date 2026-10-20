@@ -755,9 +755,11 @@ def create_app():
             "data": {"boards": [serialize_board(b) for b in all_boards]},
         })
 
-    register_socket_handlers(socketio)
-    socketio.init_app(app, async_mode='threading')
+    # register_socket_handlers(socketio)
+    # socketio.init_app(app, async_mode='threading')
 
+    register_socket_handlers(socketio)
+    socketio.init_app(app)
     return app
 
 if __name__ == "__main__":

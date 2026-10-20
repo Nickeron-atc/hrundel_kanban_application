@@ -1,9 +1,11 @@
+// hrundel-kanban/src/hooks/useBoardSocketSync.ts
 import { useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 
-const socket = io('http://localhost:5000', {
-  transports: ['websocket'],
+const socket = io(window.location.origin, {
+  transports: ['polling', 'websocket'],
+  path: '/socket.io',
 });
 
 export function useBoardSocketSync(boardId: string | null) {
