@@ -10,7 +10,10 @@ from models import User, Board, Column, Card, Tag, CardTag, BoardMember
 from auth import generate_token, jwt_required
 import jwt
 from functools import wraps
+from flask_socketio import SocketIO
+from websocket_handlers import register_socket_handlers
 
+socketio = SocketIO(cors_allowed_origins="*")
 
 def err(message, code=400):
     return jsonify({"status": "error", "data": None, "message": message}), code
@@ -722,10 +725,12 @@ def create_app():
             "data": {"boards": [serialize_board(b) for b in all_boards]},
         })
 
-    return app
+    register_socket_handlers(socketio)
+    socketio.init_app(app, async_mode='eventlet')
 
+    return app
 
 if __name__ == "__main__":
     app = create_app()
     app.run(debug=True, host="0.0.0.0", port=5000)
-
+    socketio.run(app, debug=True, host="0.0.0.0", port=5000)
