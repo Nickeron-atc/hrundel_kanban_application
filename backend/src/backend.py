@@ -726,11 +726,11 @@ def create_app():
         })
 
     register_socket_handlers(socketio)
-    socketio.init_app(app, async_mode='eventlet')
+    socketio.init_app(app, async_mode='threading')
 
     return app
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    # app.run(debug=True, host="0.0.0.0", port=5000)
     socketio.run(app, debug=True, host="0.0.0.0", port=5000)
