@@ -663,8 +663,8 @@ def create_app():
         
         board = Board.query.get(board_id)
         share_token = f"share_{board.id}_{board.user_id}"
-        share_url = f"{request.host_url}join/{share_token}"
-        
+        share_url = f"{request.url_root}join/{share_token}"   
+             
         return jsonify({
             "status": "ok",
             "data": {"share_url": share_url, "share_token": share_token}
