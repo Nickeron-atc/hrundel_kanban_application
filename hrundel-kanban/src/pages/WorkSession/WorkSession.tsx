@@ -8,7 +8,7 @@ import EmptyBoardState from "../../components/UI/EmptyBoardState/EmptyBoardState
 import { useBoards } from "../../contexts/BoardContext";
 import { useState } from "react";
 import { useBoardsPolling } from "../../hooks/useBoardsPolling";
-import { useCurrentBoardPolling } from "../../hooks/useCurrentBoardPolling";
+// import { useCurrentBoardPolling } from "../../hooks/useCurrentBoardPolling";
 import { useBoardSocketSync } from '../../hooks/useBoardSocketSync';
 import styles from "./WorkSession.module.css";
 
@@ -17,7 +17,7 @@ export default function WorkSession() {
   const { boards, currentBoardId, setCurrentBoardId, reloadBoards } = useBoards();
 
   useBoardSocketSync(currentBoardId);
-  useCurrentBoardPolling(currentBoardId, true, 3000);
+  // useCurrentBoardPolling(currentBoardId, true, 3000);
 
   const [deleteColumnDialogOpen, setDeleteColumnDialogOpen] = useState(false);
   const [columnIdToDelete, setColumnIdToDelete] = useState<string | null>(null);

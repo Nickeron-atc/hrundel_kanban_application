@@ -15,18 +15,6 @@ from websocket_handlers import register_socket_handlers
 
 socketio = SocketIO(cors_allowed_origins="*")
 
-@socketio.on('join_board')
-def handle_join_board(data):
-    board_id = data.get('board_id')
-    if board_id:
-        join_room(f"board_{board_id}")
-
-@socketio.on('leave_board')
-def handle_leave_board(data):
-    board_id = data.get('board_id')
-    if board_id:
-        leave_room(f"board_{board_id}")
-
 def notify_board(board_id):
     socketio.emit('board_refresh_needed', {'board_id': board_id}, room=f"board_{board_id}")
 
@@ -635,7 +623,7 @@ def create_app():
         g.current_user.avatar_data = f.read()
         g.current_user.avatar_mime_type = f.mimetype
         db.session.commit()
-        notify_board(board_id)
+        # notify_board(board_id)
 
         return jsonify({"ok": True})
 
@@ -657,7 +645,7 @@ def create_app():
         g.current_user.avatar_data = None
         g.current_user.avatar_mime_type = None
         db.session.commit()
-        notify_board(board_id)
+        # notify_board(board_id)
         return jsonify({"ok": True})
 
     @app.route("/api/me", methods=["GET"])
@@ -677,7 +665,7 @@ def create_app():
         if "full_name" in body:
             g.current_user.full_name = body["full_name"]
         db.session.commit()
-        notify_board(board_id)
+        # notify_board(board_id)
         return jsonify({
             "status": "ok",
             "data": {"user": g.current_user.to_dict()},
@@ -755,11 +743,8 @@ def create_app():
             "data": {"boards": [serialize_board(b) for b in all_boards]},
         })
 
-    # register_socket_handlers(socketio)
-    # socketio.init_app(app, async_mode='threading')
-
     register_socket_handlers(socketio)
-    socketio.init_app(app)
+    socketio.init_app(app, async_mode="threading")
     return app
 
 if __name__ == "__main__":

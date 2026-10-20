@@ -1,32 +1,51 @@
-// hrundel-kanban/src/hooks/useBoardSocketSync.ts
-import { useEffect } from 'react';
-import { io } from 'socket.io-client';
+import { useEffect, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 
-const socket = io(window.location.origin, {
-  transports: ['polling', 'websocket'],
-  path: '/socket.io',
-});
+let socket: Socket | null = null;
+
+function getSocket(): Socket {
+  if (!socket) {
+    socket = io(window.location.origin, {
+      transports: ['websocket', 'polling'],
+      path: '/socket.io',
+      reconnection: true,
+      reconnectionDelay: 1000,
+    });
+  }
+  return socket;
+}
 
 export function useBoardSocketSync(boardId: string | null) {
   const queryClient = useQueryClient();
+  const prevBoardId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!boardId) return;
+    const s = getSocket();
 
-    socket.emit('join_board', { board_id: boardId });
+    if (prevBoardId.current && prevBoardId.current !== boardId) {
+      s.emit('leave_board', { board_id: prevBoardId.current });
+    }
+
+    if (boardId) {
+      s.emit('join_board', { board_id: boardId });
+    }
+
+    prevBoardId.current = boardId;
 
     const handleRefresh = (data: { board_id: string | number }) => {
-      if (String(data.board_id) === boardId) {
+      if (String(data.board_id) === String(boardId)) {
         queryClient.invalidateQueries({ queryKey: ['boards'] });
       }
     };
 
-    socket.on('board_refresh_needed', handleRefresh);
+    s.on('board_refresh_needed', handleRefresh);
 
     return () => {
-      socket.emit('leave_board', { board_id: boardId });
-      socket.off('board_refresh_needed', handleRefresh);
+      s.off('board_refresh_needed', handleRefresh);
+      if (boardId) {
+        s.emit('leave_board', { board_id: boardId });
+      }
     };
   }, [boardId, queryClient]);
 }
