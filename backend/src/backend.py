@@ -10,10 +10,26 @@ from models import User, Board, Column, Card, Tag, CardTag, BoardMember
 from auth import generate_token, jwt_required
 import jwt
 from functools import wraps
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room, leave_room
 from websocket_handlers import register_socket_handlers
 
 socketio = SocketIO(cors_allowed_origins="*")
+
+@socketio.on('join_board')
+def handle_join_board(data):
+    board_id = data.get('board_id')
+    if board_id:
+        join_room(f"board_{board_id}")
+
+@socketio.on('leave_board')
+def handle_leave_board(data):
+    board_id = data.get('board_id')
+    if board_id:
+        leave_room(f"board_{board_id}")
+
+def notify_board(board_id):
+    socketio.emit('board_refresh_needed', {'board_id': board_id}, room=f"board_{board_id}")
+
 
 def err(message, code=400):
     return jsonify({"status": "error", "data": None, "message": message}), code
@@ -183,6 +199,7 @@ def create_app():
         db.session.add(board)
         db.session.commit()
 
+
         return jsonify({
             "status": "ok",
             "data": {"board": serialize_board(board)},
@@ -197,6 +214,7 @@ def create_app():
 
         db.session.delete(board)
         db.session.commit()
+        notify_board(board_id)
         return jsonify({"status": "ok"})
 
     # @app.route("/api/boards/<int:board_id>/columns", methods=["POST"])
@@ -232,6 +250,8 @@ def create_app():
         col = Column(title=title, board_id=board_id)
         db.session.add(col)
         db.session.commit()
+        socketio.emit('board_refresh_needed', {'board_id': board_id}, room=f"board_{board_id}")
+        notify_board(board_id)
         return jsonify({
             "status": "ok",
             "data": {"column": serialize_column(col)},
@@ -264,6 +284,7 @@ def create_app():
             return err("Нет прав", 403)
         db.session.delete(col)
         db.session.commit()
+        notify_board(board_id)
         return jsonify({
             "status": "ok",
             "data": {"deleted": str(column_id)},
@@ -355,6 +376,7 @@ def create_app():
         )
         db.session.add(card)
         db.session.commit()
+        notify_board(board_id)
         return jsonify({
             "status": "ok",
             "data": {"card": serialize_card(card)},
@@ -399,6 +421,7 @@ def create_app():
             card.tags = tags
 
         db.session.commit()
+        notify_board(board_id)
         return jsonify({
             "status": "ok",
             "data": {"card": serialize_card(card)},
@@ -423,6 +446,7 @@ def create_app():
             return err("Карточка не найдена", 404)
         db.session.delete(card)
         db.session.commit()
+        notify_board(board_id)
         return jsonify({
             "status": "ok",
             "data": {"deleted": str(card_id)},
@@ -539,6 +563,7 @@ def create_app():
             return err("Нет прав", 403)
         card.column_id = target_column_id
         db.session.commit()
+        notify_board(board_id)
         return jsonify({
             "status": "ok",
             "data": {
@@ -578,6 +603,7 @@ def create_app():
         tag = Tag(name=name, color=color, board_id=board_id)
         db.session.add(tag)
         db.session.commit()
+        notify_board(board_id)
 
         return jsonify({
             "status": "ok",
@@ -593,6 +619,7 @@ def create_app():
 
         db.session.delete(tag)
         db.session.commit()
+        notify_board(board_id)
         return jsonify({"status": "ok"})
 
     @app.route("/api/users/<int:user_id>/avatar", methods=["POST"])
@@ -608,6 +635,7 @@ def create_app():
         g.current_user.avatar_data = f.read()
         g.current_user.avatar_mime_type = f.mimetype
         db.session.commit()
+        notify_board(board_id)
 
         return jsonify({"ok": True})
 
@@ -629,6 +657,7 @@ def create_app():
         g.current_user.avatar_data = None
         g.current_user.avatar_mime_type = None
         db.session.commit()
+        notify_board(board_id)
         return jsonify({"ok": True})
 
     @app.route("/api/me", methods=["GET"])
@@ -648,6 +677,7 @@ def create_app():
         if "full_name" in body:
             g.current_user.full_name = body["full_name"]
         db.session.commit()
+        notify_board(board_id)
         return jsonify({
             "status": "ok",
             "data": {"user": g.current_user.to_dict()},

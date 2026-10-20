@@ -9,12 +9,14 @@ import { useBoards } from "../../contexts/BoardContext";
 import { useState } from "react";
 import { useBoardsPolling } from "../../hooks/useBoardsPolling";
 import { useCurrentBoardPolling } from "../../hooks/useCurrentBoardPolling";
+import { useBoardSocketSync } from '../../hooks/useBoardSocketSync';
 import styles from "./WorkSession.module.css";
 
 export default function WorkSession() {
   const navigate = useNavigate();
   const { boards, currentBoardId, setCurrentBoardId, reloadBoards } = useBoards();
 
+  useBoardSocketSync(currentBoardId);
   useCurrentBoardPolling(currentBoardId, true, 3000);
 
   const [deleteColumnDialogOpen, setDeleteColumnDialogOpen] = useState(false);
