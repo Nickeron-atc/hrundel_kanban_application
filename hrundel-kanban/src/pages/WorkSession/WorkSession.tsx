@@ -8,13 +8,14 @@ import EmptyBoardState from "../../components/UI/EmptyBoardState/EmptyBoardState
 import { useBoards } from "../../contexts/BoardContext";
 import { useState } from "react";
 import { useBoardsPolling } from "../../hooks/useBoardsPolling";
+import { useCurrentBoardPolling } from "../../hooks/useCurrentBoardPolling";
 import styles from "./WorkSession.module.css";
 
 export default function WorkSession() {
   const navigate = useNavigate();
   const { boards, currentBoardId, setCurrentBoardId, reloadBoards } = useBoards();
 
-  useBoardsPolling(true, 2000);
+  useCurrentBoardPolling(currentBoardId, true, 3000);
 
   const [deleteColumnDialogOpen, setDeleteColumnDialogOpen] = useState(false);
   const [columnIdToDelete, setColumnIdToDelete] = useState<string | null>(null);
