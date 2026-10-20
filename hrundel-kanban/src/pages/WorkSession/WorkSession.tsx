@@ -7,11 +7,14 @@ import { ConfirmDialog } from "../../components/UI/ConfirmDialog/ConfirmDialog";
 import EmptyBoardState from "../../components/UI/EmptyBoardState/EmptyBoardState";
 import { useBoards } from "../../contexts/BoardContext";
 import { useState } from "react";
+import { useBoardsPolling } from "../../hooks/useBoardsPolling";
 import styles from "./WorkSession.module.css";
 
 export default function WorkSession() {
   const navigate = useNavigate();
   const { boards, currentBoardId, setCurrentBoardId, reloadBoards } = useBoards();
+
+  useBoardsPolling(true, 2000);
 
   const [deleteColumnDialogOpen, setDeleteColumnDialogOpen] = useState(false);
   const [columnIdToDelete, setColumnIdToDelete] = useState<string | null>(null);
