@@ -197,13 +197,19 @@ def create_app():
     @jwt_required
     def delete_board(board_id):
         board = db.session.get(Board, board_id)
-        if not board or board.user_id != g.current_user.id:
+        if not board:
             return err("Доска не найдена", 404)
-
-        db.session.delete(board)
-        db.session.commit()
-        notify_board(board_id)
-        return jsonify({"status": "ok"})
+        if board.user_id == g.current_user.id:
+            db.session.delete(board)
+            db.session.commit()
+            notify_board(board_id)
+            return jsonify({"status": "ok"})
+        member = BoardMember.query.filter_by(board_id=board_id, user_id=g.current_user.id).first()
+        if member:
+            db.session.delete(member)
+            db.session.commit()
+            return jsonify({"status": "ok"})
+        return err("Доска не найдена", 404)
 
     # @app.route("/api/boards/<int:board_id>/columns", methods=["POST"])
     # @jwt_required
