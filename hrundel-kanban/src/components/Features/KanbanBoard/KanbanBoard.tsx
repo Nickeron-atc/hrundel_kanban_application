@@ -1,6 +1,6 @@
 // src/components/Features/KanbanBoard/KanbanBoard.tsx
 import { useState, DragEvent, useCallback, useRef, useEffect } from "react";
-import { api, Column, Board } from "../../../services/api";
+import { api, Column, Board, Tag } from "../../../services/api";
 import KanbanColumn from "../KanbanColumn/KanbanColumn";
 // Заменяем импорт старого Modal на новый AppModal
 import { AppModal } from "../../UI/AppModal/AppModal";
@@ -26,6 +26,7 @@ interface KanbanBoardProps {
   onDeleteCard?: (cardId: string) => void | Promise<void>;
   onMoveCard?: (cardId: string, targetColumnId: string) => void | Promise<void>;
   onUpdateCard?: (cardId: string, updates: Partial<Card>) => Promise<void>;
+  onRefreshTags?: () => void;
 }
 
 export default function KanbanBoard({
@@ -36,12 +37,23 @@ export default function KanbanBoard({
   onDeleteCard,
   onMoveCard,
   onUpdateCard,
+  onRefreshTags,
 }: KanbanBoardProps) {
     const cardMoveAudioRef = useRef<HTMLAudioElement | null>(null);
 
     useEffect(() => {
-        cardMoveAudioRef.current = new Audio(cardMoveSound);
+    cardMoveAudioRef.current = new Audio(cardMoveSound);
     }, []);
+
+    useEffect(() => {
+    if (board?.id) {
+        api.getTags(board.id).then((res) => {
+        if (res.status === "ok") {
+            setAvailableTags(res.data.tags);
+        }
+        });
+    }
+    }, [board?.id]);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -56,6 +68,7 @@ export default function KanbanBoard({
     const [addError, setAddError] = useState("");
     const [isAddingColumn, setIsAddingColumn] = useState(false);
     const [newColumnTitle, setNewColumnTitle] = useState("");
+    const [availableTags, setAvailableTags] = useState<Tag[]>([]);
 
     const handleDragStart = useCallback(
         (e: DragEvent<HTMLDivElement>, cardId: string) => {
@@ -178,6 +191,7 @@ export default function KanbanBoard({
                         onDeleteColumn={onDeleteColumn}
                         onDeleteCard={onDeleteCard}
                         onUpdateCard={onUpdateCard}
+                        availableTags={availableTags}
                     />
                 ))}
                 <div className={styles.addColumnWrapper}>

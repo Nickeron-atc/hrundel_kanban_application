@@ -1,5 +1,5 @@
 // src/components/Features/CardDetailsModal/CardDetailsModal.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppModal } from "../../UI/AppModal/AppModal";
 import Input from "../../UI/Input/Input";
 import Button from "../../UI/Button/Button";
@@ -43,10 +43,25 @@ export function CardDetailsModal({
                                      availableTags,
                                      onCreateTag,
                                  }: CardDetailsModalProps) {
+    // const [title, setTitle] = useState(card.title);
+    // const [description, setDescription] = useState(card.description);
+    // const [color, setColor] = useState(card.color);
+    // const [tags, setTags] = useState(card.tags);
+
     const [title, setTitle] = useState(card.title);
     const [description, setDescription] = useState(card.description);
     const [color, setColor] = useState(card.color);
     const [tags, setTags] = useState(card.tags);
+
+    useEffect(() => {
+    if (open) {
+        setTitle(card.title);
+        setDescription(card.description);
+        setColor(card.color);
+        setTags(card.tags);
+    }
+    }, [open, card.id, card.title, card.description, card.color, card.tags]);
+
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
     const [tagsModalOpen, setTagsModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
