@@ -16,7 +16,7 @@ function getSocket(): Socket {
   return socket;
 }
 
-export function useBoardSocketSync(boardId: string | null) {
+export function useBoardSocketSync(boardId: string | null, onRefresh?: () => void) {
   const queryClient = useQueryClient();
   const prevBoardId = useRef<string | null>(null);
 
@@ -35,7 +35,11 @@ export function useBoardSocketSync(boardId: string | null) {
 
     const handleRefresh = (data: { board_id: string | number }) => {
       if (String(data.board_id) === String(boardId)) {
-        queryClient.invalidateQueries({ queryKey: ['boards'] });
+        if (onRefresh) {
+          onRefresh();
+        } else {
+          queryClient.invalidateQueries({ queryKey: ['boards'] });
+        }
       }
     };
 
@@ -47,5 +51,5 @@ export function useBoardSocketSync(boardId: string | null) {
         s.emit('leave_board', { board_id: boardId });
       }
     };
-  }, [boardId, queryClient]);
+  }, [boardId, queryClient, onRefresh]);
 }

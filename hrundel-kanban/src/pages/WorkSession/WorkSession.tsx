@@ -16,6 +16,8 @@ export default function WorkSession() {
   const navigate = useNavigate();
   const { boards, currentBoardId, setCurrentBoardId, reloadBoards } = useBoards();
 
+  useBoardSocketSync(currentBoardId, reloadBoards);
+
   useBoardSocketSync(currentBoardId);
   // useCurrentBoardPolling(currentBoardId, true, 3000);
 
