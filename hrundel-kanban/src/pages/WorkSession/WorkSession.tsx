@@ -18,9 +18,6 @@ export default function WorkSession() {
 
   useBoardSocketSync(currentBoardId, reloadBoards);
 
-  useBoardSocketSync(currentBoardId);
-  // useCurrentBoardPolling(currentBoardId, true, 3000);
-
   const [deleteColumnDialogOpen, setDeleteColumnDialogOpen] = useState(false);
   const [columnIdToDelete, setColumnIdToDelete] = useState<string | null>(null);
 

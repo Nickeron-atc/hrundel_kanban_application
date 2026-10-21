@@ -7,7 +7,9 @@ let socket: Socket | null = null;
 function getSocket(): Socket {
   if (!socket) {
     socket = io(window.location.origin, {
-      transports: ['websocket', 'polling'],
+      // polling первым - это самый надежный способ пройти через прокси, 
+      // затем socket.io сам сделает апгрейд до websocket
+      transports: ['polling', 'websocket'],
       path: '/socket.io',
       reconnection: true,
       reconnectionDelay: 1000,
@@ -19,8 +21,10 @@ function getSocket(): Socket {
 export function useBoardSocketSync(boardId: string | null, onRefresh?: () => void) {
   const queryClient = useQueryClient();
   const prevBoardId = useRef<string | null>(null);
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
     const s = getSocket();
 
     if (prevBoardId.current && prevBoardId.current !== boardId) {
@@ -34,6 +38,8 @@ export function useBoardSocketSync(boardId: string | null, onRefresh?: () => voi
     prevBoardId.current = boardId;
 
     const handleRefresh = (data: { board_id: string | number }) => {
+      if (!isMounted.current) return; // Защита от обновления состояния размонтированного компонента
+      
       if (String(data.board_id) === String(boardId)) {
         if (onRefresh) {
           onRefresh();
@@ -43,9 +49,13 @@ export function useBoardSocketSync(boardId: string | null, onRefresh?: () => voi
       }
     };
 
+    // Явно удаляем старый слушатель перед добавлением нового, 
+    // чтобы избежать дублирования из-за Strict Mode
+    s.off('board_refresh_needed', handleRefresh);
     s.on('board_refresh_needed', handleRefresh);
 
     return () => {
+      isMounted.current = false;
       s.off('board_refresh_needed', handleRefresh);
       if (boardId) {
         s.emit('leave_board', { board_id: boardId });

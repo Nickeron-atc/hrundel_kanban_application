@@ -86,7 +86,7 @@ def serialize_board(board):
     }
 
 def user_owns_board(user_id, board_id):
-    board = Board.query.get(board_id)
+    board = db.session.get(Board, board_id)
     if not board:
         return False
     if board.user_id == user_id:
@@ -196,7 +196,7 @@ def create_app():
     @app.route("/api/boards/<int:board_id>", methods=["DELETE"])
     @jwt_required
     def delete_board(board_id):
-        board = Board.query.get(board_id)
+        board = db.session.get(Board, board_id)
         if not board or board.user_id != g.current_user.id:
             return err("Доска не найдена", 404)
 
@@ -220,7 +220,7 @@ def create_app():
     #     db.session.add(col)
     #     db.session.commit()
 
-    #     board = Board.query.get(board_id)
+    #     board = db.session.get(board_id)
     #     return jsonify({
     #         "status": "ok",
     #         "data": {"board": serialize_board(board)},
@@ -248,7 +248,7 @@ def create_app():
     # @app.route("/api/columns/<int:column_id>", methods=["DELETE"])
     # @jwt_required
     # def delete_column(column_id):
-    #     col = Column.query.get(column_id)
+    #     col = db.session.get(column_id)
     #     if not col or not user_owns_board(g.current_user.id, col.board_id):
     #         return err("Колонка не найдена", 404)
 
@@ -256,7 +256,7 @@ def create_app():
     #     db.session.delete(col)
     #     db.session.commit()
 
-    #     board = Board.query.get(board_id)
+    #     board = db.session.get(board_id)
     #     return jsonify({
     #         "status": "ok",
     #         "data": {"board": serialize_board(board)},
@@ -265,7 +265,7 @@ def create_app():
     @app.route("/api/columns/<int:column_id>", methods=["DELETE"])
     @jwt_required
     def delete_column(column_id):
-        col = Column.query.get(column_id)
+        col = db.session.get(Column, column_id)
         if not col:
             return err("Колонка не найдена", 404)
         if not user_owns_board(g.current_user.id, col.board_id):
@@ -377,7 +377,7 @@ def create_app():
         if not user_owns_board(g.current_user.id, board_id):
             return err("Доска не найдена или нет прав", 404)
 
-        card = Card.query.get(card_id)
+        card = db.session.get(Card, card_id)
         if not card or card.column.board_id != board_id:
             return err("Карточка не найдена", 404)
 
@@ -418,7 +418,7 @@ def create_app():
     # @app.route("/api/cards/<int:card_id>", methods=["DELETE"])
     # @jwt_required
     # def delete_card(card_id):
-    #     card = Card.query.get(card_id)
+    #     card = db.session.get(card_id)
     #     if not card or not user_owns_board(g.current_user.id, card.column.board_id):
     #         return err("Карточка не найдена", 404)
 
@@ -429,7 +429,7 @@ def create_app():
     @app.route("/api/cards/<int:card_id>", methods=["DELETE"])
     @jwt_required
     def delete_card(card_id):
-        card = Card.query.get(card_id)
+        card = db.session.get(Card, card_id)
         if not card or not user_owns_board(g.current_user.id, card.column.board_id):
             return err("Карточка не найдена", 404)
         db.session.delete(card)
@@ -450,8 +450,8 @@ def create_app():
     #     if not card_id or not target_column_id:
     #         return err("Необходимы card_id и target_column_id")
     #
-    #     card = Card.query.get(card_id)
-    #     target_col = Column.query.get(target_column_id)
+    #     card = db.session.get(card_id)
+    #     target_col = db.session.get(target_column_id)
     #
     #     if not card or not target_col:
     #         return err("Карточка или колонка не найдена", 404)
@@ -477,8 +477,8 @@ def create_app():
     #     if not card_id or not target_column_id or not board_id:
     #         return err("Необходимы card_id, target_column_id и board_id")
 
-    #     card = Card.query.get(card_id)
-    #     target_col = Column.query.get(target_column_id)
+    #     card = db.session.get(card_id)
+    #     target_col = db.session.get(target_column_id)
 
     #     if not card or not target_col:
     #         return err("Карточка или колонка не найдена", 404)
@@ -511,8 +511,8 @@ def create_app():
     #     if not card_id or not target_column_id or not board_id:
     #         return err("Необходимы card_id, target_column_id и board_id")
 
-    #     card = Card.query.get(card_id)
-    #     target_col = Column.query.get(target_column_id)
+    #     card = db.session.get(card_id)
+    #     target_col = db.session.get(target_column_id)
 
     #     if not card or not target_col:
     #         return err("Карточка или колонка не найдена", 404)
@@ -523,7 +523,7 @@ def create_app():
     #     card.column_id = target_column_id
     #     db.session.commit()
 
-    #     board = Board.query.get(target_col.board_id)
+    #     board = db.session.get(target_col.board_id)
 
     #     return jsonify({
     #         "status": "ok",
@@ -543,8 +543,8 @@ def create_app():
         board_id = body.get("board_id")
         if not card_id or not target_column_id or not board_id:
             return err("Необходимы card_id, target_column_id и board_id")
-        card = Card.query.get(card_id)
-        target_col = Column.query.get(target_column_id)
+        card = db.session.get(Card, card_id)
+        target_col = db.session.get(Column, target_column_id)
         if not card or not target_col:
             return err("Карточка или колонка не найдена", 404)
         if not user_owns_board(g.current_user.id, target_col.board_id):
@@ -682,7 +682,7 @@ def create_app():
         if not user_owns_board(g.current_user.id, board_id):
             return err("Доска не найдена или нет прав", 404)
         
-        board = Board.query.get(board_id)
+        board = db.session.get(Board, board_id)
         share_token = f"share_{board.id}_{board.user_id}"
         share_url = f"{request.url_root}join/{share_token}"   
              
@@ -710,7 +710,7 @@ def create_app():
         except ValueError:
             return err("Невалидная ссылка", 400)
         
-        board = Board.query.get(board_id)
+        board = db.session.get(Board, board_id)
         if not board or board.user_id != owner_id:
             return err("Доска не найдена", 404)
         
@@ -743,8 +743,12 @@ def create_app():
             "data": {"boards": [serialize_board(b) for b in all_boards]},
         })
 
+    # register_socket_handlers(socketio)
+    # socketio.init_app(app, async_mode="threading")
+
     register_socket_handlers(socketio)
-    socketio.init_app(app, async_mode="threading")
+    socketio.init_app(app, async_mode="eventlet")
+
     return app
 
 if __name__ == "__main__":
