@@ -278,7 +278,8 @@ def create_app():
             return err("Нет прав", 403)
         db.session.delete(col)
         db.session.commit()
-        notify_board(board_id)
+        # notify_board(board_id)
+        notify_board(col.board_id)
         return jsonify({
             "status": "ok",
             "data": {"deleted": str(column_id)},
@@ -440,7 +441,8 @@ def create_app():
             return err("Карточка не найдена", 404)
         db.session.delete(card)
         db.session.commit()
-        notify_board(board_id)
+        # notify_board(board_id)
+        notify_board(card_id)
         return jsonify({
             "status": "ok",
             "data": {"deleted": str(card_id)},
