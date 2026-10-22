@@ -10,6 +10,7 @@ import HrundelDecor from "./components/UI/HrundelDecor/HrundelDecor";
 import { BoardProvider, useBoards } from "./contexts/BoardContext";
 import BoardsListModal from "./components/Features/BoardsListModal/BoardsListModal";
 import ErrorBoundary from "./components/UI/ErrorBoundary/ErrorBoundary";
+import JoinBoard from "./pages/JoinBoard/JoinBoard";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -29,6 +30,7 @@ function AppContent() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/worksession" element={<WorkSession />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/join/:token" element={<JoinBoard />} />
                 <Route path="*" element={<ErrorPage />} />
             </Routes>
             <HrundelDecor />

@@ -19,11 +19,12 @@ export default function ShareBoardModal({ open, onClose, boardId, boardTitle }: 
         if (open && boardId) {
             setLoading(true);
             api.getShareLink(boardId).then((res) => {
-                if (res.status === "ok") {
-                    setShareUrl(res.data.share_url);
-                }
-                setLoading(false);
-            });
+            if (res.status === "ok") {
+                // setShareUrl(`${window.location.origin}/join/${res.data.share_token}`);
+                setShareUrl(`http://26.19.204.168:5173/join/${res.data.share_token}`);
+            }
+            setLoading(false);
+        });
         }
     }, [open, boardId]);
 
